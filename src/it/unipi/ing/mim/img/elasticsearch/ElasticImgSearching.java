@@ -21,7 +21,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import it.unipi.ing.mim.deep.DNNExtractor;
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.tools.FeaturesStorage;
@@ -38,31 +37,6 @@ public class ElasticImgSearching implements AutoCloseable {
 	//optional
 	private Map<String, ImgDescriptor> imgDescMap;
 		
-	public static void main(String[] args) throws Exception {
-		
-		try (ElasticImgSearching imgSearch = new ElasticImgSearching(Parameters.PIVOTS_FILE, Parameters.TOP_K_QUERY)) {
-			//Image Query File
-			File imgQuery = new File(Parameters.SRC_FOLDER, "000000007816.jpg");
-			
-			DNNExtractor extractor = new DNNExtractor();
-			
-			float[] imgFeatures = extractor.extract(imgQuery, Parameters.DEEP_LAYER);
-			
-			ImgDescriptor query = new ImgDescriptor(imgFeatures, imgQuery.getName());
-					
-			long time = -System.currentTimeMillis();
-			List<ImgDescriptor> res = imgSearch.search(query, Parameters.K);
-			time += System.currentTimeMillis();
-			System.out.println("Search time: " + time + " ms");
-			
-			Output.toHTML(res, Parameters.BASE_URI, Parameters.RESULTS_HTML_ELASTIC);
-			
-			//Uncomment for the optional step
-			res = imgSearch.reorder(query, res);
-			Output.toHTML(res, Parameters.BASE_URI, Parameters.RESULTS_HTML_REORDERED);
-		}
-	}
-	
 	//TODO
 	public ElasticImgSearching(File pivotsFile, int topKSearch) throws ClassNotFoundException, IOException {
 		//Initialize pivots, imgDescMap, REST

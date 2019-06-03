@@ -6,22 +6,25 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 
 	private static final long serialVersionUID = 1L;
 	
-	private float[] normalizedVector; // image feature
+	private float[][] features; // image feature
 	
 	private String id; // unique id of the image (usually file name)
 	
 	private double dist; // used for sorting purposes
 	
-	public ImgDescriptor(float[] features, String id) {
+	public ImgDescriptor(float[][] features, String id) {
 		if (features != null) {
-			float norm2 = evaluateNorm2(features);
-			this.normalizedVector = getNormalizedVector(features, norm2);
+			this.features = new float[features.length][128];
+			for (int i = 0; i < features.length; ++i) {
+				float norm2 = evaluateNorm2(features[i]);
+				this.features[i] = getNormalizedVector(features[i], norm2);
+			}
 		}
 		this.id = id;
 	}
 	
-	public float[] getFeatures() {
-		return normalizedVector;
+	public float[][] getFeatures() {
+		return features;
 	}
 	
     public String getId() {
@@ -48,13 +51,16 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 	
 	//evaluate Euclidian distance
 	public double distance(ImgDescriptor desc) {
-		float[] queryVector = desc.getFeatures();
+		float[][] queryVector = desc.getFeatures();
 		
 		dist = 0;
 		for (int i = 0; i < queryVector.length; i++) {
-			dist += (normalizedVector[i] - queryVector[i]) * (normalizedVector[i] - queryVector[i]);
+			for (int j = 0; j < queryVector[i].length; ++j) {
+				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
+			}
+			// TODO: questa cosa non ha senso in caso di una matrice di features
+			dist = Math.sqrt(dist);
 		}
-		dist = Math.sqrt(dist);
 		
 		return dist;
 	}

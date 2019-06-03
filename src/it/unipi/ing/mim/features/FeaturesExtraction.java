@@ -6,6 +6,8 @@ import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_features2d.Feature2D;
 import org.bytedeco.opencv.opencv_features2d.ORB;
+import org.bytedeco.opencv.opencv_xfeatures2d.SIFT;
+import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.javacpp.indexer.UByteRawIndexer;
 
 public class FeaturesExtraction {
@@ -28,25 +30,24 @@ public class FeaturesExtraction {
 	//TODO
 	public FeaturesExtraction() {
 		//initialize descExtractor;
-		descExtractor = ORB.create();
+		descExtractor = SIFT.create();
 	}
 
 	//TODO
 	public Mat extractDescriptor(Mat img, KeyPointVector keypoints) {
 		//extract the visual features
 		Mat descriptor = new Mat();
-		if (descriptor != null) descExtractor.compute(img,  keypoints, descriptor);
+		descExtractor.compute(img,  keypoints, descriptor);
 		return descriptor;
 	}
 
 	//TODO
 	public void printFeatureValues(Mat descQuery) {
 		//Print the feature data
-		UByteRawIndexer indexer = descQuery.createIndexer();
+		FloatRawIndexer indexer = descQuery.createIndexer();
 		long rows = indexer.rows();
 		long cols = indexer.cols();
 		for (long i = 0; i < rows; ++i)
 			for (long j = 0; j < cols; ++j) System.out.println("value: " + indexer.get(i, j));
 	}
-
 }

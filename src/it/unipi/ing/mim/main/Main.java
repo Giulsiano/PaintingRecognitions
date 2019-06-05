@@ -1,6 +1,9 @@
 package it.unipi.ing.mim.main;
+import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -10,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.core.pattern.EndOfBatchPatternConverter;
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -35,39 +39,39 @@ public class Main {
 		Main m = new Main();
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
-		List<ImgDescriptor> descriptors = indexing.extractFeatures(Parameters.imgDir);
-		m.runMatlabCode(new File(Parameters.DESCRIPTOR_FILE));
-		System.out.println("Ended program");
+		File descFile = new File(Parameters.DESCRIPTOR_FILE);
+		if (!descFile.exists()) {
+			indexing.extractFeatures(Parameters.imgDir);
+		}
+		File clusterFile =  new File(Parameters.CLUSTER_FILE);
+		if (!clusterFile.exists()) {
+			System.out.println("Running kmeans by using Matlab");
+			m.runMatlabCode(descFile);
+		}		
+		System.out.println("Program ended");
 	}
 	
-	private void runMatlabCode (List<ImgDescriptor> descriptors) {
+	private float[][] runMatlabCode (File descriptorFile) throws Exception {
 		MatlabEngine eng;
 		try {
 			eng = MatlabEngine.startMatlab();
-			for (ImgDescriptor descriptor : descriptors) {
-				eng.putVariable("f", descriptor.getFeatures());
-				eng.eval("");
+			eng.putVariable("M", null);
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
+			ImgDescriptor desc = null;
+			while (true){
+				try {
+					desc = (ImgDescriptor) ois.readObject();
+					if (!(desc instanceof ImgDescriptor)) break;
+					float[][] feat = desc.getFeatures();
+					eng.putVariable("temp", feat);
+					eng.eval("M = [M; temp];");
+				}
+				catch (IOException e) { 
+					break;
+				}
 			}
-			eng = MatlabEngine.startMatlab();
 		    eng.eval("[idx, C] = kmeans(M, " + 1000 + ");");
-		    double[][] C = eng.getVariable("C");
-		}
-		catch (EngineException | IllegalArgumentException | IllegalStateException | InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	private void runMatlabCode (File keypointFile) throws Exception {
-		MatlabEngine eng;
-		try {
-			eng = MatlabEngine.startMatlab();
-		    eng.eval("M = csvread(\"" + keypointFile.getAbsolutePath() +"\");");
-		    eng.eval("[idx, C] = kmeans(M, " + 1000 + ");");
-		    double[][] C = eng.getVariable("C");
+		    float[][] C = eng.getVariable("C");
 		    
 		    // Put keypoints into file line by line
     		StringBuilder fileRow = new StringBuilder();
@@ -82,13 +86,13 @@ public class Main {
     			fileRow.setLength(0);
     		}
     		file.close();
+    		return C;
 		} catch (EngineException | IllegalArgumentException | IllegalStateException | InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} 
+		return null;
 	}
 	
 	private List<Mat> scanImgDirectory() throws IOException {

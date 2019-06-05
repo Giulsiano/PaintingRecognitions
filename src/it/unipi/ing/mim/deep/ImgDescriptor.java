@@ -58,7 +58,6 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 			for (int j = 0; j < queryVector[i].length; ++j) {
 				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
 			}
-			// TODO: questa cosa non ha senso in caso di una matrice di features
 			dist = Math.sqrt(dist);
 		}
 		return dist;

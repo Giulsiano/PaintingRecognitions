@@ -1,36 +1,38 @@
 package it.unipi.ing.mim.main;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 
-import org.apache.logging.log4j.core.pattern.EndOfBatchPatternConverter;
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
-import static org.bytedeco.opencv.global.opencv_features2d.drawKeypoints;
-import static org.bytedeco.opencv.global.opencv_highgui.imshow;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
 
-import com.mathworks.engine.*;
+import com.mathworks.engine.EngineException;
+import com.mathworks.engine.MatlabEngine;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.seq.SeqImageStorage;
-import it.unipi.ing.mim.deep.tools.FeaturesStorage;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.KeyPointsDetector;
+import javafx.util.Pair;
 
 public class Main {
 	
@@ -43,15 +45,80 @@ public class Main {
 		if (!descFile.exists()) {
 			indexing.extractFeatures(Parameters.imgDir);
 		}
-		File clusterFile =  new File(Parameters.CLUSTER_FILE);
-		if (!clusterFile.exists()) {
+		
+		// Compute centroids of the database
+		File pivotFile =  Parameters.PIVOTS_FILE;
+		float[][] centroids = null;
+		List<Centroid> centroidList = new LinkedList<Centroid>();
+		if (!pivotFile.exists()) {
 			System.out.println("Running kmeans by using Matlab");
-			m.runMatlabCode(descFile);
-		}		
+			centroids = m.computeKMeans(descFile);
+		    // Put keypoints into file line by line
+			System.out.println("Storing centroids to disk");
+    		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pivotFile))) { 
+    			for (int i = 0; i < centroids.length; i ++) {
+    				Centroid c = new Centroid(centroids[i], i);
+    				oos.writeObject(c);	
+    			}
+    		}
+		}
+		else {
+			System.out.println("Loading centroid from file");
+			while (true) {
+				try (ObjectInputStream oos = new ObjectInputStream(new FileInputStream(pivotFile))) { 
+    				centroidList.add((Centroid) oos.readObject());
+	    		}
+				catch(EOFException e) {
+					// File is ended, so we finish to read 
+					break;
+				}
+			}
+		}
+		if (centroidList.isEmpty()) System.out.println("AAAAAAAA lista vuota AAAAAAAAH!");
+		while (true) {
+			try (ObjectInputStream oos = new ObjectInputStream(new FileInputStream(descFile))) {
+				List<Pair<Integer, Float[]>> distances = new LinkedList<Pair<Integer, Float[]>>();
+				ImgDescriptor imgDesc = (ImgDescriptor) oos.readObject();
+				for (Centroid c : centroidList) {
+					distances.add(new Pair<Integer, Float[]>(c.getId(), c.distancesTo(imgDesc)));
+				}
+				
+				List<Pair<Integer, Float>> postingLists = new LinkedList<Pair<Integer, Float>>();
+				for (int i = 0; i < centroidList.size(); i++) {
+					Pair<Integer, Float> postingList  = null;
+					for (Pair<Integer, Float[]> distId : distances) {
+						postingList = new Pair<Integer, Float>(distId.getKey(), distId.getValue()[i]);
+					}
+					postingLists.add(postingList);
+					// TODO Implementare il comparator
+					Collections.sort(list, new Comparator<T>() {
+					});
+				}
+				postingLists.forEach((postList) -> {Arrays.parallelSort(postList);});
+				
+    		}
+			catch(EOFException e) {
+				// File is ended, so we finish to read 
+				break;
+			}
+		}
 		System.out.println("Program ended");
 	}
 	
-	private float[][] runMatlabCode (File descriptorFile) throws Exception {
+	private float[] getRecordFromLine(String line) {
+	    float[] values = null;
+	    try (Scanner rowScanner = new Scanner(line)) {
+	        rowScanner.useDelimiter(",");
+	        int i = 0;
+	        values = new float[128];	// TODO put the constant into the parameters class
+	        while (rowScanner.hasNext()) {
+	        	values[i] = rowScanner.nextFloat();
+	        }
+	    }
+	    return values;
+	}
+	
+	private float[][] computeKMeans (File descriptorFile) throws Exception {
 		MatlabEngine eng;
 		try {
 			eng = MatlabEngine.startMatlab();
@@ -71,22 +138,7 @@ public class Main {
 				}
 			}
 		    eng.eval("[idx, C] = kmeans(M, " + 1000 + ");");
-		    float[][] C = eng.getVariable("C");
-		    
-		    // Put keypoints into file line by line
-    		StringBuilder fileRow = new StringBuilder();
-    		PrintWriter file = new PrintWriter(Parameters.CLUSTER_FILE);
-    		for (int j = 0; j < C.length; j++) {
-    			for (int k = 0; k < C[j].length; k++) {
-    				fileRow.append(C[j][k]+ ((k < (C[j].length - 1)) ? "," : "\n"));
-    			}
-    			file.append(fileRow.toString());
-				
-    			// Reset the string buffer
-    			fileRow.setLength(0);
-    		}
-    		file.close();
-    		return C;
+		    return eng.getVariable("C");
 		} catch (EngineException | IllegalArgumentException | IllegalStateException | InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {

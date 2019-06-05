@@ -39,15 +39,21 @@ public class SeqImageStorage {
 		FeaturesExtraction extractor = new FeaturesExtraction();
 		
 		try {
+			// For each directory into the main image directory
 			ObjectOutputStream ois = new ObjectOutputStream(new FileOutputStream(descFile));
 			for (Path dir : Files.newDirectoryStream(imgFolder)) {
+				
+				// For each file into the directory
 				for (Path file : Files.newDirectoryStream(dir)) {
+					
 					filename = file.toString();
 					if (filename.toLowerCase().endsWith(".jpg")) {
+						// Compute the descriptors of the image
 						Mat image = imread(filename);
 						KeyPointVector keypoints = detector.detectKeypoints(image);
 						Mat descriptor = extractor.extractDescriptor(image, keypoints);
 						
+						// Create the feature matrix for the image to be stored into an ImgDescriptor
 						FloatRawIndexer idx = descriptor.createIndexer();
 						int rows = (int) idx.rows();
 						int cols = (int) idx.cols();
@@ -57,8 +63,12 @@ public class SeqImageStorage {
 								feat[i][j] = idx.get(i, j);
 							}
 						}
+						
+						// Store on file each descriptor's feature normalized. ImgDescriptor normalize
+						// the matrix into the constructor
 						System.out.println("Saving keypoints for " + filename);
 						ImgDescriptor ids = new ImgDescriptor(feat, filename);
+						ids.setId(filename);
 						ois.writeObject(ids);
 						feat = ids.getFeatures();
 						for (int i = 0; i < rows; i++) {
@@ -72,6 +82,7 @@ public class SeqImageStorage {
 						}
 					}
 				}
+				// If we store everything in memory the program crashes for its memory consumption
 				ois.flush();
 			}
 		}

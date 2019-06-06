@@ -8,6 +8,10 @@ import it.unipi.ing.mim.features.KeyPointsDetector;
 import java.nio.file.Path;
 
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+import org.bytedeco.opencv.opencv_core.*;
+import org.bytedeco.opencv.opencv_features2d.*;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.bytedeco.opencv.global.opencv_features2d.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
+import org.bytedeco.opencv.opencv_core.FileStorage;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 
@@ -45,41 +50,22 @@ public class SeqImageStorage {
 				
 				// For each file into the directory
 				for (Path file : Files.newDirectoryStream(dir)) {
-					
 					filename = file.toString();
 					if (filename.toLowerCase().endsWith(".jpg")) {
 						// Compute the descriptors of the image
+						
 						Mat image = imread(filename);
 						KeyPointVector keypoints = detector.detectKeypoints(image);
 						Mat descriptor = extractor.extractDescriptor(image, keypoints);
-						
-						// Create the feature matrix for the image to be stored into an ImgDescriptor
-						FloatRawIndexer idx = descriptor.createIndexer();
-						int rows = (int) idx.rows();
-						int cols = (int) idx.cols();
-						float[][] feat = new float[rows][cols];
-						for (int i = 0; i < rows; i++) {
-							for (int j = 0; j < cols; j++) {
-								feat[i][j] = idx.get(i, j);
-							}
-						}
-						
+
 						// Store on file each descriptor's feature normalized. ImgDescriptor normalize
 						// the matrix into the constructor
 						System.out.println("Saving keypoints for " + filename);
-						ImgDescriptor ids = new ImgDescriptor(feat, filename);
+						ImgDescriptor ids = new ImgDescriptor(descriptor, filename);
 						ids.setId(filename);
+						FileStorage fs = new FileStorage(filename, FileStorage.WRITE);
+						write(fs, "prova", ids.getFeatures());
 						ois.writeObject(ids);
-						feat = ids.getFeatures();
-						for (int i = 0; i < rows; i++) {
-							for (int j = 0; j < cols; j++) {
-								fileLine.append(feat[i][j] + ((j < (feat[i].length - 1)) ? "," : "\n"));
-							}
-							featFile.append(fileLine.toString());
-							
-			    			// Reset the string buffer
-			    			fileLine.setLength(0);
-						}
 					}
 				}
 				// If we store everything in memory the program crashes for its memory consumption

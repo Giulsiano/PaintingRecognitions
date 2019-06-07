@@ -2,28 +2,51 @@ package it.unipi.ing.mim.deep;
 
 import java.io.Serializable;
 
+import org.bytedeco.javacpp.indexer.FloatRawIndexer;
+import org.bytedeco.opencv.opencv_core.Mat;
+
 public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 
 	private static final long serialVersionUID = 1L;
 	
-	private float[][] features; // image feature
+	private Mat features; // image feature
 	
 	private String id; // unique id of the image (usually file name)
 	
 	private double dist; // used for sorting purposes
 	
-	public ImgDescriptor(float[][] features, String id) {
-		if (features != null) {
-			this.features = new float[features.length][128];
-			for (int i = 0; i < features.length; ++i) {
-				float norm2 = evaluateNorm2(features[i]);
-				this.features[i] = getNormalizedVector(features[i], norm2);
+	private int rows;
+	private int cols;
+	
+	public ImgDescriptor(Mat features, String id) {
+		this.features = new Mat(features);
+		FloatRawIndexer idx = this.features.createIndexer();
+		this.rows = (int) this.features.rows();
+		this.cols = (int) this.features.cols();
+		
+		// Compute normalized features for this image
+		float[] feat = new float[(int) cols];
+		for (int i = 0; i < rows; ++i) {
+			for (int j = 0; j < cols; ++j) {
+				 feat[j] = idx.get(i, j);
+			}
+			float norm2 = evaluateNorm2(feat);
+			feat = getNormalizedVector(feat, norm2);
+			for (int j = 0; j < feat.length; ++j) {
+				idx.put(i, j, feat[j]);
 			}
 		}
-		this.id = id;
 	}
 	
-	public float[][] getFeatures() {
+	public int getRows() {
+		return rows;
+	}
+
+	public int getCols() {
+		return cols;
+	}
+
+	public Mat getFeatures() {
 		return features;
 	}
 	
@@ -49,19 +72,23 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 		return Double.valueOf(dist).compareTo(arg0.dist);
 	}
 	
-	//evaluate Euclidian distance
-	public double distance(ImgDescriptor desc) {
-		float[][] queryVector = desc.getFeatures();
-		
-		dist = 0;
-		for (int i = 0; i < queryVector.length; i++) {
-			for (int j = 0; j < queryVector[i].length; ++j) {
-				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
-			}
-			dist = Math.sqrt(dist);
-		}
-		return dist;
-	}
+//	//evaluate Euclidian distance
+//	public double distance(ImgDescriptor desc) {
+//		Mat queryVector = desc.getFeatures();
+//		FloatRawIndexer qryIdx = queryVector.createIndexer();
+//		FloatRawIndexer featIdx = features.createIndexer();
+//		
+//		long rows = qryIdx.rows();
+//		long cols = qryIdx.cols();
+//		dist = 0;
+//		for (int i = 0; i < rows; i++) {
+//			for (int j = 0; j < cols; ++j) {
+//				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
+//			}
+//			dist = Math.sqrt(dist);
+//		}
+//		return dist;
+//	}
 	
 	//Normalize the vector values 
 	private float[] getNormalizedVector(float[] vector, float norm) {

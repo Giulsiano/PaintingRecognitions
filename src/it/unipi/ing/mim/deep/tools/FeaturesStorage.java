@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class FeaturesStorage {
-	
+
 	public static void store(List<ImgDescriptor> ids, File storageFile) throws IOException {
 		storageFile.getParentFile().mkdir();
 		 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(storageFile))) { 
@@ -45,5 +45,5 @@ public class FeaturesStorage {
 			 oos.writeObject(features);
 		 }
 	}
-	
+
 }

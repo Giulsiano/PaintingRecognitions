@@ -37,12 +37,6 @@ import static org.bytedeco.opencv.global.opencv_core.CV_32F;
 
 public class Main {
 	
-	public class MatSerializable extends Mat implements Serializable{
-		private static final long serialVersionUID = 1L;	
-	}
-	
-	
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws Exception {
 		// example for running Matlab code
 		Main m = new Main();
@@ -58,7 +52,7 @@ public class Main {
 		File pivotFile =  Parameters.PIVOTS_FILE;
 		List<Centroid> centroidList = new LinkedList<Centroid>();
 		if (!pivotFile.exists()) {
-			System.out.println("Running kmeans by using Matlab");
+			System.out.println("Running kmeans by using OpenCV");
 			kmeansResults = m.computeKMeans(descFile);
 			Mat centroids = kmeansResults[0];
 		    // Put keypoints into file line by line
@@ -95,7 +89,7 @@ public class Main {
 				for (Centroid c : centroidList) {
 					distances.add(new Pair<Integer, Float[]>(c.getId(), c.distancesTo(imgDesc)));
 				}
-				int keypointNumber = imgDesc.getCols();
+				int keypointNumber = imgDesc.getFeatures().length;
 				List<Vector<Pair<Integer, Float>>> postingLists = new Vector<>(keypointNumber);
 				for (int i = 0; i < centroidList.size(); i++) {
 					Vector<Pair<Integer, Float>> postingList  = new Vector<>();
@@ -133,9 +127,11 @@ public class Main {
 		Mat bigmat = new Mat();
 		while (true){
 			try {
-				Mat feat = ((ImgDescriptor) ois.readObject()).getFeatures();
+				float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
+				Mat featMat = ImgDescriptor.float2Mat(feat);
+				int featRows = featMat.rows();
 				for (int i = 0; i < Parameters.RANDOM_KEYPOINT_NUM; ++i) {
-					bigmat.push_back(feat.row((int)(Math.random() * feat.rows())));
+					bigmat.push_back(featMat.row((int)(Math.random() * featRows)));
 				}
 			}
 			catch (EOFException e) { 

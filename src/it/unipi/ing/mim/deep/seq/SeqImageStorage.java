@@ -50,7 +50,8 @@ public class SeqImageStorage {
 						// Store on file each descriptor's feature normalized. ImgDescriptor normalize
 						// the matrix into the constructor
 						System.out.println("Saving keypoints for " + filename);
-						ImgDescriptor ids = new ImgDescriptor(descriptor, filename);
+						float[][] features = ImgDescriptor.mat2float(descriptor);
+						ImgDescriptor ids = new ImgDescriptor(features, filename);
 						ids.setId(filename);
 					}
 				}

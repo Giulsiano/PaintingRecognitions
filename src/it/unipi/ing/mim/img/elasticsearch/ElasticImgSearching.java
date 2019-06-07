@@ -107,7 +107,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		//LOOP
 		//for each result evaluate the distance with the query, call  setDist to set the distance, then sort the results
 		for(ImgDescriptor imgDescTemp: res) {
-			imgDescTemp.distance(queryF);
+			//imgDescTemp.distance(queryF);
 		  }
 		
 		Collections.sort(res);

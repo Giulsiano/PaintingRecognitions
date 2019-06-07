@@ -23,15 +23,12 @@ public class Centroid implements Serializable{
 	}
 	
 	public Float[] distancesTo (ImgDescriptor img) {
-		Mat imgKeypoints = img.getFeatures();
-		FloatRawIndexer keypointIdx = imgKeypoints.createIndexer();
+		float[][] imgKeypoints = img.getFeatures();
 		
-		int rows = img.getRows();
-		int cols = img.getCols();
-		Float[] d = new Float[(int) rows];
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; j++) {
-				float value = keypointIdx.get(i, j);
+		Float[] d = new Float[imgKeypoints.length];
+		for (int i = 0; i < imgKeypoints.length; i++) {
+			for (int j = 0; j < imgKeypoints[i].length; j++) {
+				float value = imgKeypoints[i][j];
 				d[i] += (value - coordinates[j]) * (value- coordinates[j]);
 			}
 			d[i] = (float) Math.sqrt(d[i]);

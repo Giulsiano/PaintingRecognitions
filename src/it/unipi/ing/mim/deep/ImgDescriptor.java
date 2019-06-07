@@ -4,49 +4,30 @@ import java.io.Serializable;
 
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
+import static org.bytedeco.opencv.global.opencv_core.CV_32F;
 
 public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 
 	private static final long serialVersionUID = 1L;
 	
-	private Mat features; // image feature
+	private float[][] features; // image feature
 	
 	private String id; // unique id of the image (usually file name)
 	
 	private double dist; // used for sorting purposes
 	
-	private int rows;
-	private int cols;
-	
-	public ImgDescriptor(Mat features, String id) {
-		this.features = new Mat(features);
-		FloatRawIndexer idx = this.features.createIndexer();
-		this.rows = (int) this.features.rows();
-		this.cols = (int) this.features.cols();
+	public ImgDescriptor(float[][] features, String id) {
+		this.features = new float[features.length][];
 		
 		// Compute normalized features for this image
-		float[] feat = new float[(int) cols];
-		for (int i = 0; i < rows; ++i) {
-			for (int j = 0; j < cols; ++j) {
-				 feat[j] = idx.get(i, j);
-			}
+		for (int i = 0; i < features.length; ++i) {
+			float[] feat = features[i];
 			float norm2 = evaluateNorm2(feat);
-			feat = getNormalizedVector(feat, norm2);
-			for (int j = 0; j < feat.length; ++j) {
-				idx.put(i, j, feat[j]);
-			}
+			this.features[i] = getNormalizedVector(feat, norm2);
 		}
 	}
-	
-	public int getRows() {
-		return rows;
-	}
 
-	public int getCols() {
-		return cols;
-	}
-
-	public Mat getFeatures() {
+	public float[][] getFeatures() {
 		return features;
 	}
 	
@@ -72,6 +53,31 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 		return Double.valueOf(dist).compareTo(arg0.dist);
 	}
 	
+	public static float[][] mat2float (Mat mat){
+		FloatRawIndexer idx = mat.createIndexer();
+		int rows = (int) idx.rows();
+		int cols = (int) idx.cols();
+		float[][] matrix = new float[rows][cols];
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; ++j) {
+				matrix[i][j] = idx.get(i, j);
+			}
+		}
+		return matrix;
+	}
+	
+	public static Mat float2Mat (float[][] mat){
+		Mat matrix = new Mat(mat.length, mat[0].length, CV_32F);
+		FloatRawIndexer idx = matrix.createIndexer();
+		int rows = (int) idx.rows();
+		int cols = (int) idx.cols();
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; ++j) {
+				idx.put(i, j, mat[i][j]);
+			}
+		}
+		return matrix;
+	}
 //	//evaluate Euclidian distance
 //	public double distance(ImgDescriptor desc) {
 //		Mat queryVector = desc.getFeatures();

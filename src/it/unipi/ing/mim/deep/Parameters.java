@@ -48,12 +48,10 @@ public class Parameters {
 	public static final String DB_PATH = "data/database.db";
 	public static final String MODEL = "empty model!";
 	public static final Path imgDir = FileSystems.getDefault().getPath("../wikiartDEBUG"); 
-	public static final File CLUSTER_FILE = new File("clusters.dat");
+	public static final String CLUSTER_FILE = "clusters.dat";
 	public static final int MAX_DISTANCE_THRESHOLD = 35;
-	public static final Integer NUM_KMEANS_CLUSTER = 10;	// TODO Ricorda di cambiarlo
+	public static final Integer NUM_KMEANS_CLUSTER = 10000;
 	public static final String DESCRIPTOR_FILE = "descriptors.dat";
 	public static final String FEATURE_FILE = "allfeats.csv";
-	
-	// Number of random keypoint chosen from keypoint computed by SIFT
-	public static final int RANDOM_KEYPOINT_NUM = 20;
+
 }

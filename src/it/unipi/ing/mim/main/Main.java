@@ -1,5 +1,4 @@
 package it.unipi.ing.mim.main;
-import static org.bytedeco.opencv.global.opencv_core.kmeans;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
 import java.io.EOFException;
@@ -10,21 +9,23 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Vector;
+import java.util.concurrent.ExecutionException;
 
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.TermCriteria;
-import org.opencv.core.Core;
+
+import com.mathworks.engine.EngineException;
+import com.mathworks.engine.MatlabEngine;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
@@ -33,16 +34,8 @@ import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.KeyPointsDetector;
 import javafx.util.Pair;
 
-import static org.bytedeco.opencv.global.opencv_core.CV_32F;
-
 public class Main {
 	
-	public class MatSerializable extends Mat implements Serializable{
-		private static final long serialVersionUID = 1L;	
-	}
-	
-	
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws Exception {
 		// example for running Matlab code
 		Main m = new Main();
@@ -54,20 +47,18 @@ public class Main {
 		}
 		
 		// Compute centroids of the database
-		Mat[] kmeansResults = new Mat[2];
 		File pivotFile =  Parameters.PIVOTS_FILE;
+		float[][] centroids = null;
 		List<Centroid> centroidList = new LinkedList<Centroid>();
 		if (!pivotFile.exists()) {
 			System.out.println("Running kmeans by using Matlab");
-			kmeansResults = m.computeKMeans(descFile);
-			Mat centroids = kmeansResults[0];
+			centroids = m.computeKMeans(descFile);
 		    // Put keypoints into file line by line
 			System.out.println("Storing centroids to disk");
-			int rows = centroids.rows();
     		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(pivotFile))) { 
-    			for (int i = 0; i < rows; i ++) {
-    				Centroid c = new Centroid(centroids.row(i), i);
-    				oos.writeObject(c);
+    			for (int i = 0; i < centroids.length; i ++) {
+    				Centroid c = new Centroid(centroids[i], i);
+    				oos.writeObject(c);	
     			}
     		}
 		}
@@ -83,11 +74,7 @@ public class Main {
 				}
 			}
 		}
-		// Start indexing images from diretories
-		if (centroidList.isEmpty()) {
-			System.err.println("AAAAAAAA lista vuota AAAAAAAAH!");
-			System.exit(1);
-		}
+		if (centroidList.isEmpty()) System.out.println("AAAAAAAA lista vuota AAAAAAAAH!");
 		while (true) {
 			try (ObjectInputStream oos = new ObjectInputStream(new FileInputStream(descFile))) {
 				List<Pair<Integer, Float[]>> distances = new LinkedList<Pair<Integer, Float[]>>();
@@ -95,16 +82,20 @@ public class Main {
 				for (Centroid c : centroidList) {
 					distances.add(new Pair<Integer, Float[]>(c.getId(), c.distancesTo(imgDesc)));
 				}
-				int keypointNumber = imgDesc.getCols();
-				List<Vector<Pair<Integer, Float>>> postingLists = new Vector<>(keypointNumber);
+				
+				List<Pair<Integer, Float>> postingLists = new LinkedList<Pair<Integer, Float>>();
 				for (int i = 0; i < centroidList.size(); i++) {
-					Vector<Pair<Integer, Float>> postingList  = new Vector<>();
+					Pair<Integer, Float> postingList  = null;
 					for (Pair<Integer, Float[]> distId : distances) {
-						postingList.add(new Pair<Integer, Float>(distId.getKey(), distId.getValue()[i]));
+						postingList = new Pair<Integer, Float>(distId.getKey(), distId.getValue()[i]);
 					}
-					postingList.sort(Comparator.comparing(Pair::getValue));
 					postingLists.add(postingList);
+					// TODO Implementare il comparator
+					Collections.sort(list, new Comparator<T>() {
+					});
 				}
+				postingLists.forEach((postList) -> {Arrays.parallelSort(postList);});
+				
     		}
 			catch(EOFException e) {
 				// File is ended, so we finish to read 
@@ -127,38 +118,33 @@ public class Main {
 	    return values;
 	}
 	
-	private Mat[] computeKMeans (File descriptorFile) throws Exception {
-		// Get features randomly from each image
-		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
-		Mat bigmat = new Mat();
-		while (true){
-			try {
-				Mat feat = ((ImgDescriptor) ois.readObject()).getFeatures();
-				for (int i = 0; i < Parameters.RANDOM_KEYPOINT_NUM; ++i) {
-					bigmat.push_back(feat.row((int)(Math.random() * feat.rows())));
+	private float[][] computeKMeans (File descriptorFile) throws Exception {
+		MatlabEngine eng;
+		try {
+			eng = MatlabEngine.startMatlab();
+			eng.putVariable("M", null);
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
+			ImgDescriptor desc = null;
+			while (true){
+				try {
+					desc = (ImgDescriptor) ois.readObject();
+					if (!(desc instanceof ImgDescriptor)) break;
+					float[][] feat = desc.getFeatures();
+					eng.putVariable("temp", feat);
+					eng.eval("M = [M; temp];");
+				}
+				catch (IOException e) { 
+					break;
 				}
 			}
-			catch (EOFException e) { 
-				break;
-			}
-		}
-		
-		// Compute kmeans' centroids
-		Mat labels = new Mat();
-		Mat centroids = new Mat();
-		TermCriteria criteria = new TermCriteria(CV_32F, 100, 1.0d);
-		kmeans(bigmat, Parameters.NUM_KMEANS_CLUSTER, labels, criteria, 1, Core.KMEANS_PP_CENTERS, centroids);
-		
-		// Save centroids to file
-		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(Parameters.CLUSTER_FILE));
-		oos.writeObject(centroids);
-		oos.close();
-		
-		// Put results of kmeans into an array and return it
-		Mat[] results = new Mat[2];
-		results[0] = centroids;
-		results[1] = labels;
-		return results;
+		    eng.eval("[idx, C] = kmeans(M, " + 1000 + ");");
+		    return eng.getVariable("C");
+		} catch (EngineException | IllegalArgumentException | IllegalStateException | InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		} 
+		return null;
 	}
 	
 	private List<Mat> scanImgDirectory() throws IOException {

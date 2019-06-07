@@ -46,12 +46,6 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		// example for running Matlab code
 		Main m = new Main();
-		
-		MatSerializable mat = m.new MatSerializable();
-		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(Parameters.PIVOTS_FILE))) { 
-				oos.writeObject(mat);
-		}
-		
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = new File(Parameters.DESCRIPTOR_FILE);

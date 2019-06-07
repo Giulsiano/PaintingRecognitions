@@ -67,17 +67,11 @@ public class ElasticImgIndexing implements AutoCloseable {
 	
 	//TODO
 	public void index() throws IOException {
-		//LOOP
-			//index all dataset features into Elasticsearch
-		//List<ImgDescriptor> imgDescPivots= Pivots.makeRandomPivots(imgDescDataset,topKIdx);
-		//int tempK=topKIdx;
 		for(ImgDescriptor imgTemp: imgDescDataset ) {
 			String temp=pivots.features2Text(imgTemp, topKIdx);
 			IndexRequest request= composeRequest(imgTemp.getId(), temp);
 			client.index(request,RequestOptions.DEFAULT);
-		    
 		}
-		
 	}
 	
 	//TODO

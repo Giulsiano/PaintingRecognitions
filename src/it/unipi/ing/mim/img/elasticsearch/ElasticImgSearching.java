@@ -24,7 +24,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.tools.FeaturesStorage;
-import it.unipi.ing.mim.deep.tools.Output;
 
 public class ElasticImgSearching implements AutoCloseable {
 

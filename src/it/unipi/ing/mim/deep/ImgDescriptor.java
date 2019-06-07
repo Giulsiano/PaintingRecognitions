@@ -2,10 +2,6 @@ package it.unipi.ing.mim.deep;
 
 import java.io.Serializable;
 
-import org.bytedeco.javacpp.indexer.FloatRawIndexer;
-import org.bytedeco.opencv.opencv_core.Mat;
-import static org.bytedeco.opencv.global.opencv_core.CV_32F;
-
 public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 
 	private static final long serialVersionUID = 1L;
@@ -25,6 +21,7 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 			float norm2 = evaluateNorm2(feat);
 			this.features[i] = getNormalizedVector(feat, norm2);
 		}
+		this.id = id;
 	}
 
 	public float[][] getFeatures() {
@@ -53,31 +50,6 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 		return Double.valueOf(dist).compareTo(arg0.dist);
 	}
 	
-	public static float[][] mat2float (Mat mat){
-		FloatRawIndexer idx = mat.createIndexer();
-		int rows = (int) idx.rows();
-		int cols = (int) idx.cols();
-		float[][] matrix = new float[rows][cols];
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; ++j) {
-				matrix[i][j] = idx.get(i, j);
-			}
-		}
-		return matrix;
-	}
-	
-	public static Mat float2Mat (float[][] mat){
-		Mat matrix = new Mat(mat.length, mat[0].length, CV_32F);
-		FloatRawIndexer idx = matrix.createIndexer();
-		int rows = (int) idx.rows();
-		int cols = (int) idx.cols();
-		for (int i = 0; i < rows; i++) {
-			for (int j = 0; j < cols; ++j) {
-				idx.put(i, j, mat[i][j]);
-			}
-		}
-		return matrix;
-	}
 //	//evaluate Euclidian distance
 //	public double distance(ImgDescriptor desc) {
 //		Mat queryVector = desc.getFeatures();

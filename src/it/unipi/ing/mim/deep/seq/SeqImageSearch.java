@@ -1,14 +1,12 @@
 package it.unipi.ing.mim.deep.seq;
 
-import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.deep.Parameters;
-import it.unipi.ing.mim.deep.tools.FeaturesStorage;
-import it.unipi.ing.mim.deep.tools.Output;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
+import it.unipi.ing.mim.deep.ImgDescriptor;
+import it.unipi.ing.mim.deep.tools.FeaturesStorage;
 
 public class SeqImageSearch {
 
@@ -21,7 +19,7 @@ public class SeqImageSearch {
 	public List<ImgDescriptor> search(ImgDescriptor queryF, int k) {
 		long time = -System.currentTimeMillis();
 		for (int i=0;i<descriptors.size();i++){
-			descriptors.get(i).distance(queryF);
+			//descriptors.get(i).distance(queryF);
 		}
 		time += System.currentTimeMillis();
 		System.out.println(time + " ms");

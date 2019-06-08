@@ -24,7 +24,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.tools.FeaturesStorage;
-import it.unipi.ing.mim.deep.tools.Output;
 
 public class ElasticImgSearching implements AutoCloseable {
 
@@ -107,7 +106,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		//LOOP
 		//for each result evaluate the distance with the query, call  setDist to set the distance, then sort the results
 		for(ImgDescriptor imgDescTemp: res) {
-			imgDescTemp.distance(queryF);
+			//imgDescTemp.distance(queryF);
 		  }
 		
 		Collections.sort(res);

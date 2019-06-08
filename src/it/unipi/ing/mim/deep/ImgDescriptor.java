@@ -13,16 +13,17 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 	private double dist; // used for sorting purposes
 	
 	public ImgDescriptor(float[][] features, String id) {
-		if (features != null) {
-			this.features = new float[features.length][128];
-			for (int i = 0; i < features.length; ++i) {
-				float norm2 = evaluateNorm2(features[i]);
-				this.features[i] = getNormalizedVector(features[i], norm2);
-			}
+		this.features = new float[features.length][];
+		
+		// Compute normalized features for this image
+		for (int i = 0; i < features.length; ++i) {
+			float[] feat = features[i];
+			float norm2 = evaluateNorm2(feat);
+			this.features[i] = getNormalizedVector(feat, norm2);
 		}
 		this.id = id;
 	}
-	
+
 	public float[][] getFeatures() {
 		return features;
 	}
@@ -49,19 +50,23 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 		return Double.valueOf(dist).compareTo(arg0.dist);
 	}
 	
-	//evaluate Euclidian distance
-	public double distance(ImgDescriptor desc) {
-		float[][] queryVector = desc.getFeatures();
-		
-		dist = 0;
-		for (int i = 0; i < queryVector.length; i++) {
-			for (int j = 0; j < queryVector[i].length; ++j) {
-				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
-			}
-			dist = Math.sqrt(dist);
-		}
-		return dist;
-	}
+//	//evaluate Euclidian distance
+//	public double distance(ImgDescriptor desc) {
+//		Mat queryVector = desc.getFeatures();
+//		FloatRawIndexer qryIdx = queryVector.createIndexer();
+//		FloatRawIndexer featIdx = features.createIndexer();
+//		
+//		long rows = qryIdx.rows();
+//		long cols = qryIdx.cols();
+//		dist = 0;
+//		for (int i = 0; i < rows; i++) {
+//			for (int j = 0; j < cols; ++j) {
+//				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
+//			}
+//			dist = Math.sqrt(dist);
+//		}
+//		return dist;
+//	}
 	
 	//Normalize the vector values 
 	private float[] getNormalizedVector(float[] vector, float norm) {

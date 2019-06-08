@@ -16,9 +16,6 @@ public class Parameters {
 	//Image Source Folder
 	public static final File SRC_FOLDER = new File("data/img");
 	
-	//Features Storage File
-	public static final File STORAGE_FILE = new File("descriptors.dat");
-	
 	//k-Nearest Neighbors
 	public static final int K = 30;
 	
@@ -44,17 +41,20 @@ public class Parameters {
 	public static final File RESULTS_HTML_REORDERED = new File("out/deep.reordered.html");
 	
 	// Our parameters
-	public static final float threshold = 0.9f;
-	public static final String DB_PATH = "data/database.db";
-	public static final String MODEL = "empty model!";
-	public static final Path imgDir = FileSystems.getDefault().getPath("../wikiartDEBUG"); 
+	// Files we need to do things
+	public static final File DB_PATH = new File("data/database.db");
 	public static final File CLUSTER_FILE = new File("clusters.dat");
 	public static final File LABEL_FILE = new File("labels.dat");
-	public static final int MAX_DISTANCE_THRESHOLD = 35;
-	public static final Integer NUM_KMEANS_CLUSTER = 10;	// TODO Ricorda di cambiarlo
-	public static final String DESCRIPTOR_FILE = "descriptors.dat";
+	public static final File DESCRIPTOR_FILE = new File("descriptors.dat");
 	public static final File POSTING_LISTS_FILE =  new File("posting_lists.dat");
 	
+	// Where are images to be indexed
+	public static final Path imgDir = FileSystems.getDefault().getPath("../wikiartDEBUG");
+	
+	// Algorithm parameters
+	public static final int MAX_DISTANCE_THRESHOLD = 35;
+	public static final Integer NUM_KMEANS_CLUSTER = 10;	// TODO Ricorda di cambiarlo
+
 	// Number of random keypoint chosen from keypoint computed by SIFT
 	public static final int RANDOM_KEYPOINT_NUM = 20;
 }

@@ -1,9 +1,6 @@
 package it.unipi.ing.mim.main;
 
 import java.io.Serializable;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -57,5 +54,4 @@ public class Centroid implements Serializable{
 	public void setId(int id) {
 		this.id = id;
 	}
-
 }

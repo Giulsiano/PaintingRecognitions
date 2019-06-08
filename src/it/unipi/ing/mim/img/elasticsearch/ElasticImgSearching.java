@@ -23,7 +23,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
-import it.unipi.ing.mim.deep.tools.FeaturesStorage;
+import it.unipi.ing.mim.deep.tools.StreamManagement;
 
 public class ElasticImgSearching implements AutoCloseable {
 
@@ -45,7 +45,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	    client=new RestHighLevelClient(builder);
 	    
 	    //optional
-	    List<ImgDescriptor> tempList= FeaturesStorage.load(Parameters.STORAGE_FILE);
+	    List<ImgDescriptor> tempList= StreamManagement.load(Parameters.STORAGE_FILE);
 	    this.imgDescMap= new HashMap<>();
 	    for(ImgDescriptor imgDescTemp: tempList) {
 	    	imgDescMap.put(imgDescTemp.getId(),imgDescTemp);
@@ -78,7 +78,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			String id=  (String)metadata.get(Fields.ID);
 			ImgDescriptor imgDescTemp= new ImgDescriptor(null, id);
 			imgDescMap.get(id).setDist(hits[i].getScore());
-			res.add(imgDescMap.get(id));//imgDescTemp);
+			res.add(imgDescMap.get(id));
 			
 		}
 		return res;

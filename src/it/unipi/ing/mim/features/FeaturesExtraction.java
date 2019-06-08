@@ -2,13 +2,11 @@ package it.unipi.ing.mim.features;
 
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
+import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_features2d.Feature2D;
-import org.bytedeco.opencv.opencv_features2d.ORB;
 import org.bytedeco.opencv.opencv_xfeatures2d.SIFT;
-import org.bytedeco.javacpp.indexer.FloatRawIndexer;
-import org.bytedeco.javacpp.indexer.UByteRawIndexer;
 
 public class FeaturesExtraction {
 

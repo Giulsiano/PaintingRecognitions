@@ -6,14 +6,14 @@ import java.util.Collections;
 import java.util.List;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.deep.tools.FeaturesStorage;
+import it.unipi.ing.mim.deep.tools.StreamManagement;
 
 public class SeqImageSearch {
 
 	private List<ImgDescriptor> descriptors;
 		
 	public void open(File storageFile) throws ClassNotFoundException, IOException {
-		descriptors = FeaturesStorage.load(storageFile );
+		descriptors = StreamManagement.load(storageFile);
 	}
 	
 	public List<ImgDescriptor> search(ImgDescriptor queryF, int k) {

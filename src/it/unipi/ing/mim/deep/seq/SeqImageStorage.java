@@ -21,7 +21,7 @@ import it.unipi.ing.mim.utils.MatConverter;
 
 public class SeqImageStorage {
 	
-	private final File descFile = new File(Parameters.DESCRIPTOR_FILE);
+	private final File descFile = Parameters.DESCRIPTOR_FILE;
 
 	public void extractFeatures(Path imgFolder) throws FileNotFoundException{
 		String filename = imgFolder.toString();
@@ -57,6 +57,7 @@ public class SeqImageStorage {
 				}
 				ois.flush();
 			}
+			ois.close();
 		}
 		catch (IOException e) {
 			System.out.println("IOException for " + filename);

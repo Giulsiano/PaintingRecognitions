@@ -92,6 +92,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 			StreamManagement.store(centroidList, pivotFile);
     		StreamManagement.store(MatConverter.mat2int(labels), labelFile);
 		}
+		// Load labels with centroids also
 		if (centroidList.isEmpty()) {
 			System.err.println("No centroids have been found. Exiting.");
 			System.exit(1);
@@ -113,6 +114,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		// Save posting lists to file
 		StreamManagement.store(postingLists, Parameters.POSTING_LISTS_FILE);
 
+		// Make ElasticSearch to index images
 		try(ElasticImgIndexing esIndex = new ElasticImgIndexing(Parameters.POSTING_LISTS_FILE, 
 																Parameters.TOP_K_IDX)){
 			esIndex.createIndex();

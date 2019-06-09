@@ -6,12 +6,18 @@ import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_features2d.Feature2D;
+import org.bytedeco.opencv.opencv_features2d.ORB;
 import org.bytedeco.opencv.opencv_xfeatures2d.SIFT;
+
+import it.unipi.ing.mim.deep.Parameters;
 
 public class FeaturesExtraction {
 
 	private Feature2D descExtractor;
 
+	public static final int SIFT_FEATURES = 1;
+	public static final int ORB_FEATURES = 2;
+	KeyPointsDetector detector = new KeyPointsDetector();
 	public static void main(String[] args) throws Exception {
 
 		Mat img = imread("data/img/figure-at-a-window.jpg");
@@ -19,16 +25,32 @@ public class FeaturesExtraction {
 		KeyPointsDetector detector = new KeyPointsDetector();		
 		KeyPointVector keypoints = detector.detectKeypoints(img);
 		
-		FeaturesExtraction extractor = new FeaturesExtraction();
+		FeaturesExtraction extractor = new FeaturesExtraction(SIFT_FEATURES);
 		Mat descQuery = extractor.extractDescriptor(img, keypoints);
 
 		extractor.printFeatureValues(descQuery);
 	}
 
 	//TODO
-	public FeaturesExtraction() {
+	public FeaturesExtraction(int featureType) {
 		//initialize descExtractor;
-		descExtractor = SIFT.create();
+		switch (featureType) {
+			case SIFT_FEATURES:
+				descExtractor = SIFT.create();
+				break;
+			
+			case ORB_FEATURES:
+				descExtractor = ORB.create();
+				((ORB) descExtractor).setMaxFeatures(Parameters.ORB_MAX_FEATURE);
+				break;
+	
+			default:
+				throw new IllegalArgumentException("Feature extractor not recognized");
+		}
+	}
+	
+	public Feature2D getDescExtractor() {
+		return descExtractor;
 	}
 
 	//TODO

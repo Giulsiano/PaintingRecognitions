@@ -49,7 +49,7 @@ public class Parameters {
 	public static final File POSTING_LISTS_FILE =  new File("posting_lists.dat");
 	
 	// Where are images to be indexed
-	public static final Path imgDir = FileSystems.getDefault().getPath("../wikiartDEBUG");
+	public static final Path imgDir = FileSystems.getDefault().getPath("wikiartDEBUG");
 	
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 35;
@@ -57,4 +57,7 @@ public class Parameters {
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
 	public static final int RANDOM_KEYPOINT_NUM = 20;
+	
+	// ORB feature extraction parameters
+	public static final int ORB_MAX_FEATURE = 1000;
 }

@@ -1,6 +1,11 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
+import static org.bytedeco.opencv.global.opencv_features2d.drawKeypoints;
+import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+import static org.bytedeco.opencv.global.opencv_highgui.imshow;
+import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
+import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,6 +20,7 @@ import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.bytedeco.opencv.opencv_core.DMatchVector;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.elasticsearch.action.search.SearchRequest;
@@ -28,11 +34,14 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import com.sun.org.apache.bcel.internal.generic.BASTORE;
+
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
 import it.unipi.ing.mim.features.FeaturesExtraction;
-import it.unipi.ing.mim.features.KeyPointsDetector;
+import it.unipi.ing.mim.features.FeaturesMatching;
+import it.unipi.ing.mim.features.FeaturesMatchingFiltered;
 import it.unipi.ing.mim.main.Centroid;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
@@ -44,25 +53,68 @@ public class ElasticImgSearching implements AutoCloseable {
 	private static String PROTOCOL = "http";
 	private RestHighLevelClient client;
 	
-	
-	public static void search(String image) throws Exception {
+	public void search(String image) throws Exception {
 		// Read the image to search and extract its feature
-		Mat img = imread(image);
+		Mat queryImg = imread(image);
 		ElasticImgSearching eis = new ElasticImgSearching(Parameters.TOP_K_QUERY);
 		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
-		KeyPointVector keypoints = new KeyPointVector(); 
-		extractor.getDescExtractor().detect(img, keypoints);
+		KeyPointVector keypoints = new KeyPointVector();
+		extractor.getDescExtractor().detect(queryImg, keypoints);
 		
-		Mat queryDesc = extractor.extractDescriptor(img, keypoints);
+		Mat queryDesc = extractor.extractDescriptor(queryImg, keypoints);
 		ImgDescriptor query = new ImgDescriptor(MatConverter.mat2float(queryDesc), image);
-		
+
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(eis.computeClusterFrequencies(query), Parameters.TOP_K_QUERY);
+		String bofQuery = BOF.features2Text(eis.computeClusterFrequencies(query), Parameters.K);
 		List<String> neighbours = eis.search(bofQuery, Parameters.K);
+		eis.close();
 		
-		// Compute ORB features for query and images
+		// Compute ORB features for query
+		extractor = new FeaturesExtraction(FeaturesExtraction.ORB_FEATURES);
+		KeyPointVector qryKeypoints = new KeyPointVector();
+		extractor.getDescExtractor().detect(queryImg, qryKeypoints);
+		queryDesc = extractor.extractDescriptor(queryImg, qryKeypoints);
+		
+		// Compute ORB features for each neighbour and 
+		FeaturesMatching matcher = new FeaturesMatching();
+		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();
+		List<SimpleEntry<String, DMatchVector>> goodMatches = new LinkedList<>();
+		for (String neighbourName : neighbours) {
+			Mat img = imread(neighbourName);
+			keypoints = new KeyPointVector();
+			extractor.getDescExtractor().detect(img, keypoints);
+			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
+			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
+			DMatchVector filteredMatches = filter.filterMatches(matches, Parameters.MAX_DISTANCE_THRESHOLD);
+			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
+ 		}
+		
+		// Get the image with the great number of matches
+		long numGoodMatches = 0;
+		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
+		for (SimpleEntry<String, DMatchVector> goodMatch : goodMatches) {
+			long size = goodMatch.getValue().size();
+			if (size > numGoodMatches) {
+				numGoodMatches = size;
+				bestGoodMatch = goodMatch;
+			}
+		}
+		if (bestGoodMatch != null) {
+			Mat bestImg = imread(bestGoodMatch.getKey());
+			keypoints = new KeyPointVector();
+			extractor.getDescExtractor().detect(bestImg, keypoints);
+			Mat imgFeatures = extractor.extractDescriptor(bestImg, keypoints);
+			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
+			Mat imgMatches = new Mat();
+			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
+			imshow("Test matching", imgMatches);
+			waitKey();
+			destroyAllWindows();
+		}
+		else System.err.println("No good matches found for " + image);
 		
 //		Output.toHTML(neighbours, Parameters.BASE_URI, Parameters.RESULTS_HTML_REORDERED);
+		
 	}
 		
 	//TODO
@@ -90,7 +142,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		SearchHit[] hits = searchResponse.getHits().getHits();
 		client.close();
 		
-		//for each result retrieve the ImgDescriptor from imgDescMap and call setDist to set the score
 		res = new ArrayList<>(hits.length);	
 		for (int i = 0; i < hits.length; i++) {
 			Map<String, Object> metadata = hits[i].getSourceAsMap();
@@ -131,6 +182,9 @@ public class ElasticImgSearching implements AutoCloseable {
 		List<Centroid> centroidList = (List<Centroid>) StreamManagement.load(Parameters.PIVOTS_FILE, List.class);
 		Float[][] distancesFromCentroids = query.distancesTo(centroidList);
 		int[] qryLabel = new int[distancesFromCentroids.length];
+		
+		// Create the "label" of the cluster, that is an array of at which cluster the keypoint
+		// considered belong to
 		Arrays.fill(qryLabel, 0);
 		float minValue = Float.MAX_VALUE;
 		for (int i = 0; i < distancesFromCentroids.length; ++i) {
@@ -155,10 +209,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		for (int i = 0; i < frequencies.length; ++i) {
 			clusterFrequencies[i] = new SimpleEntry<Integer, Integer>(i, frequencies[i]);
 		}
-		Arrays.parallelSort(clusterFrequencies, 
-							Comparator.comparing(SimpleEntry::getValue, 
-							Comparator.reverseOrder())
-				);
+		Arrays.sort(clusterFrequencies, Comparator.comparing(SimpleEntry::getValue, 
+															 Comparator.reverseOrder()));
 
 		return clusterFrequencies;
 	}

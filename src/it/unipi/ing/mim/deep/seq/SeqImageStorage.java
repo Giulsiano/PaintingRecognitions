@@ -17,7 +17,6 @@ import org.bytedeco.opencv.opencv_features2d.Feature2D;
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.features.FeaturesExtraction;
-import it.unipi.ing.mim.features.KeyPointsDetector;
 import it.unipi.ing.mim.utils.MatConverter;
 
 public class SeqImageStorage {
@@ -37,12 +36,12 @@ public class SeqImageStorage {
 					for (Path file : Files.newDirectoryStream(dir)) {
 						filename = file.toString();
 						if (filename.toLowerCase().endsWith(".jpg")) {
-							// Compute the descriptors of the image
+							// Compute descriptors of the image
 							Mat image = imread(filename);
 							KeyPointVector keypoints = new KeyPointVector();
 							detector.detect(image, keypoints);
 							Mat descriptor = extractor.extractDescriptor(image, keypoints);
-	
+							
 							// Store on file each descriptor's feature normalized. ImgDescriptor normalize
 							// the matrix into the constructor
 							System.out.println("Image #" + (++i) + ": saving keypoints for " + filename);

@@ -1,5 +1,6 @@
 package it.unipi.ing.mim.main;
 
+import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgIndexing;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 
@@ -16,9 +17,9 @@ public class Main {
 
 			if (ans.toLowerCase().equals("r")) {
 				if(System.getProperty("os.name").startsWith("Windows"))
-					ElasticImgSearching.search("wikiartDEBUG\\ni-zan\\autumn-wind-in-gemstones-trees.jpg");
+					new ElasticImgSearching(Parameters.TOP_K_QUERY).search(".\\wikiartDEBUG\\ni-zan\\bamboo-and-elegant-stone.jpg");
 				else
-					ElasticImgSearching.search("wikiartDEBUG/ni-zan/autumn-wind-in-gemstones-trees.jpg");
+					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("wikiartDEBUG/ni-zan/autumn-wind-in-gemstones-trees.jpg");
 			}
 			else if (ans.toLowerCase().equals("i")) {
 				ElasticImgIndexing.indexAll(args);

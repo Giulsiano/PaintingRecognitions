@@ -19,9 +19,7 @@ public class Centroid implements Serializable{
 		if (m.rows() > 1) throw new IllegalArgumentException("Mat row is not a row");
 		FloatRawIndexer idx = m.createIndexer();
 		coordinates = new float[m.cols()];
-		for (int i = 0; i < m.cols(); ++i) {
-			coordinates[i] = idx.get(i);
-		}
+		idx.get(0, coordinates);
 		this.id = id;
 	}
 	

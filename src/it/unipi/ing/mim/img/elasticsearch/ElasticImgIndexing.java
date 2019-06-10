@@ -86,20 +86,20 @@ public class ElasticImgIndexing implements AutoCloseable {
 			StreamManagement.store(centroidList, pivotFile);
     		StreamManagement.store(MatConverter.mat2int(labels), labelFile);
 		}
-		// Load labels with centroids also
-		if (centroidList.isEmpty()) {
-			System.err.println("No centroids have been found. Exiting.");
-			System.exit(1);
-		}
-		else {
+		// Load labels from disk
+		if (!centroidList.isEmpty()) {
 			System.out.println("Loaded centroids");
 			int[][] rawLabels = (int[][]) StreamManagement.load(labelFile, int[][].class);
 			labels = MatConverter.int2Mat(rawLabels);
 			System.out.println("Loaded labels");
 		}
+		else {
+			System.err.println("No centroids have been found. Exiting.");
+			System.exit(1);
+		}
 		
 		// Read all image names from disk
-		List<String> imgIds = getImagesName(descFile);
+		List<String> imgIds = readImagesNameFrom(descFile);
 		
 		// Create posting lists by counting frequencies of cluster per image
 		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 

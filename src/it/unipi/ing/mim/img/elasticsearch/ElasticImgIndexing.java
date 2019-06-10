@@ -50,6 +50,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	
 	private Map<String, SimpleEntry<Integer, Integer>[]> postingListDataset;
 	private int topKIdx;
+	private static List<Integer> keypointPerImage = new LinkedList<Integer>();
 	
 	private RestHighLevelClient client;
 
@@ -102,7 +103,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		
 		// Create posting lists by counting frequencies of cluster per image
 		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 
-				BOF.getPostingLists(labels, centroidList.size(), imgIds);
+				BOF.getPostingLists(labels, centroidList.size(), keypointPerImage, imgIds);
 		
 		// Save posting lists to file
 		StreamManagement.store(postingLists, Parameters.POSTING_LISTS_FILE);
@@ -150,21 +151,22 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return imgIds;
 	}
 	
-	private static Mat[] computeKMeans (File descriptorFile) throws Exception {
+	private static Mat[] computeKMeans (File descriptorFile) {
 		// Get features randomly from each image
 		Mat bigmat = new Mat();
-		int imgCount = 0;
 		try {
 			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
 			while (true){
 				try {
-					// Create the matrix of features
+					// Read the matrix of features
 					float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
 					Mat featMat = MatConverter.float2Mat(feat);
 					int featRows = featMat.rows();
 					
+					// Save the number of features extracted for using it during posting list computation
+					keypointPerImage.add(feat.length);
+					
 					// Get unique random numbers from RNG
-					System.out.println("img " + (++imgCount) + ": taking random rows from its features");
 					Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
 					int times = Math.min(featRows, Parameters.RANDOM_KEYPOINT_NUM);
 					for (int i = 0; i < times; ++i) {

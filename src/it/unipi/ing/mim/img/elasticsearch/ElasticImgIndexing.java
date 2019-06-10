@@ -21,13 +21,16 @@ import java.util.Set;
 import org.apache.http.HttpHost;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.TermCriteria;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.opencv.core.Core;
@@ -201,15 +204,28 @@ public class ElasticImgIndexing implements AutoCloseable {
 	
 	//TODO
 	public void createIndex() throws IOException {
-		//Create the Elasticsearch index
-		IndicesClient idx = client.indices();
-		CreateIndexRequest request = new CreateIndexRequest(Parameters.INDEX_NAME);
-		Builder s = Settings.builder()
-							.put("index.number_of_shards", 1)
-				            .put("index.number_of_replicas", 0)
-				            .put("analysis.analyzer.first.type", "whitespace");
-		request.settings(s);
-		idx.create(request, RequestOptions.DEFAULT);
+		try {
+			GetIndexRequest requestdel = new GetIndexRequest(Parameters.INDEX_NAME);
+			// If the index already exists
+			if(client.indices().exists(requestdel, RequestOptions.DEFAULT)) {
+				System.out.println("Delete index");
+				DeleteIndexRequest deleteInd = new DeleteIndexRequest(Parameters.INDEX_NAME);
+				AcknowledgedResponse deleteIndexResponse = client.indices().delete(deleteInd, RequestOptions.DEFAULT);
+			}
+			
+			System.out.println("Create index");
+			//Create the Elasticsearch index
+			IndicesClient idx = client.indices();
+			CreateIndexRequest request = new CreateIndexRequest(Parameters.INDEX_NAME);
+			Builder s = Settings.builder()
+								.put("index.number_of_shards", 1)
+					            .put("index.number_of_replicas", 0)
+					            .put("analysis.analyzer.first.type", "whitespace");
+			request.settings(s);
+			idx.create(request, RequestOptions.DEFAULT);
+		}catch(Exception e) {
+			System.out.println("Index \'" + Parameters.INDEX_NAME +"\' already exists");
+		}
 	}
 	
 	//TODO

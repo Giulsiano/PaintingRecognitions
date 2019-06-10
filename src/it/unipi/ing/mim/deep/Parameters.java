@@ -17,19 +17,19 @@ public class Parameters {
 	public static final File SRC_FOLDER = new File("data/img");
 	
 	//k-Nearest Neighbors
-	public static final int K = 30;
+	public static final int K = 20;
 	
 	//Pivots File
-	public static final File  PIVOTS_FILE = new File("pivot.dat");
+	public static final File PIVOTS_FILE = new File("pivot.dat");
 	
 	//Number Of Pivots
-	public static final int NUM_PIVOTS = 100;
+	//public static final int NUM_PIVOTS = 100;
 
 	//Top K pivots For Indexing
 	public static final int TOP_K_IDX = 10;
 	
 	//Top K pivots For Searching
-	public static final int TOP_K_QUERY = 10;
+	public static final int TOP_K_QUERY = 30;
 	
 	//Lucene Index
 	public static final String INDEX_NAME = "painting";
@@ -49,14 +49,14 @@ public class Parameters {
 	public static final File POSTING_LISTS_FILE =  new File("posting_lists.dat");
 	
 	// Where are images to be indexed
-	public static final Path imgDir = FileSystems.getDefault().getPath("wikiartDEBUG");
+	public static final Path imgDir = FileSystems.getDefault().getPath("C:\\Users\\Matlab\\wikiartDEBUG");
 	
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 35;
-	public static final Integer NUM_KMEANS_CLUSTER = 10;	// TODO Ricorda di cambiarlo
+	public static final Integer NUM_KMEANS_CLUSTER = 300;	// TODO Ricorda di cambiarlo
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
-	public static final int RANDOM_KEYPOINT_NUM = 20;
+	public static final int RANDOM_KEYPOINT_NUM = 200;
 	
 	// ORB feature extraction parameters
 	public static final int ORB_MAX_FEATURE = 1000;

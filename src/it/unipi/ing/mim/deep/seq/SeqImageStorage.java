@@ -29,9 +29,8 @@ public class SeqImageStorage {
 		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
 		Feature2D detector = extractor.getDescExtractor();
 		int i = 0;
-		try {
+		try (ObjectOutputStream ois = new ObjectOutputStream(new FileOutputStream(descFile))){
 			// For each directory into the main image directory
-			ObjectOutputStream ois = new ObjectOutputStream(new FileOutputStream(descFile));
 			for (Path dir : Files.newDirectoryStream(imgFolder)) {
 				if(!dir.toString().endsWith(".DS_Store")) {
 					// For each file into the directory
@@ -60,10 +59,10 @@ public class SeqImageStorage {
 				}
 				ois.flush();
 			}
-			ois.close();
 		}
 		catch (IOException e) {
-			System.out.println("IOException for " + filename);
+			System.err.println("IOException for " + filename);
+			System.err.println(e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 	}

@@ -88,9 +88,10 @@ public class ElasticImgSearching implements AutoCloseable {
 		//perform elasticsearch search
 		SearchResponse searchResponse = client.search(searchReq, RequestOptions.DEFAULT);
 		SearchHit[] hits = searchResponse.getHits().getHits();
-		res = new ArrayList<>(hits.length);	
+		client.close();
 		
 		//for each result retrieve the ImgDescriptor from imgDescMap and call setDist to set the score
+		res = new ArrayList<>(hits.length);	
 		for (int i = 0; i < hits.length; i++) {
 			Map<String, Object> metadata = hits[i].getSourceAsMap();
 			String id =  (String) metadata.get(Fields.ID);
@@ -102,14 +103,13 @@ public class ElasticImgSearching implements AutoCloseable {
 	
 	//TODO
 	private SearchRequest composeSearch (String query, int k) {
-		//Initialize SearchRequest and set query and k
-		SearchRequest searchRequest = null;
-		
 		QueryBuilder queryBuild = QueryBuilders.multiMatchQuery(query, Fields.IMG);
 		SearchSourceBuilder sb = new SearchSourceBuilder();
 		sb.size(k);
 		sb.query(queryBuild);
-		searchRequest = new SearchRequest(Parameters.INDEX_NAME);
+		
+		// Build the request
+		SearchRequest searchRequest = new SearchRequest(Parameters.INDEX_NAME);
 		searchRequest.types("doc");
 		searchRequest.source(sb);
 		return searchRequest;
@@ -155,8 +155,9 @@ public class ElasticImgSearching implements AutoCloseable {
 		for (int i = 0; i < frequencies.length; ++i) {
 			clusterFrequencies[i] = new SimpleEntry<Integer, Integer>(i, frequencies[i]);
 		}
-		Arrays.parallelSort(clusterFrequencies, Comparator.comparing(SimpleEntry::getValue, 
-				Comparator.reverseOrder())
+		Arrays.parallelSort(clusterFrequencies, 
+							Comparator.comparing(SimpleEntry::getValue, 
+							Comparator.reverseOrder())
 				);
 
 		return clusterFrequencies;

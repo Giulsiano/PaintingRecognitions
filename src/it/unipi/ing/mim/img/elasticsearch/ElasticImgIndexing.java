@@ -10,10 +10,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.HttpHost;
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -124,6 +127,8 @@ public class ElasticImgIndexing implements AutoCloseable {
 	
 	private static List<String> getImagesName (File file) throws FileNotFoundException, IOException, ClassNotFoundException{
 		List<String> imgIds = new LinkedList<String>();
+		
+		// For memory usage problem we have to read one descriptor at a time instead of the whole file
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))){
 			while (true) {
 				try  {
@@ -141,22 +146,39 @@ public class ElasticImgIndexing implements AutoCloseable {
 	private static Mat[] computeKMeans (File descriptorFile) throws Exception {
 		// Get features randomly from each image
 		Mat bigmat = new Mat();
-		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile))){
-			
+		int imgCount = 0;
+		try {
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
 			while (true){
 				try {
+					// Create the matrix of features
 					float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
-					
 					Mat featMat = MatConverter.float2Mat(feat);
 					int featRows = featMat.rows();
-					for (int i = 0; i < Parameters.RANDOM_KEYPOINT_NUM; ++i) {
-						bigmat.push_back(featMat.row((int)(Math.random() * featRows)));
+					
+					// Get unique random numbers from RNG
+					System.out.println("img " + (++imgCount) + ": taking random rows from its features");
+					Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
+					int times = Math.min(featRows, Parameters.RANDOM_KEYPOINT_NUM);
+					for (int i = 0; i < times; ++i) {
+						int randValue = (int) (Math.random() * featRows);
+						if (!randomRows.add(randValue)) {
+							--i;
+						}
 					}
+					
+					// Make the matrix of whole features by taking random rows from the feature 
+					// matrix
+					randomRows.forEach((randRow) -> { bigmat.push_back(featMat.row(randRow)); } );
 				}
 				catch (EOFException e) { 
 					break;
 				}
 			}
+			ois.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
 		}
 		
 		// Compute kmeans' centroids

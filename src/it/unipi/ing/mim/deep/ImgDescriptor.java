@@ -1,6 +1,12 @@
 package it.unipi.ing.mim.deep;
 
 import java.io.Serializable;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import it.unipi.ing.mim.main.Centroid;
 
 public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 
@@ -49,24 +55,26 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 	public int compareTo(ImgDescriptor arg0) {
 		return Double.valueOf(dist).compareTo(arg0.dist);
 	}
-	
-//	//evaluate Euclidian distance
-//	public double distance(ImgDescriptor desc) {
-//		Mat queryVector = desc.getFeatures();
-//		FloatRawIndexer qryIdx = queryVector.createIndexer();
-//		FloatRawIndexer featIdx = features.createIndexer();
-//		
-//		long rows = qryIdx.rows();
-//		long cols = qryIdx.cols();
-//		dist = 0;
-//		for (int i = 0; i < rows; i++) {
-//			for (int j = 0; j < cols; ++j) {
-//				dist += (features[i][j] - queryVector[i][j]) * (features[i][j] - queryVector[i][j]);
-//			}
-//			dist = Math.sqrt(dist);
-//		}
-//		return dist;
-//	}
+	 
+	public Float[][] distancesTo (List<Centroid> centroids) {
+		Float[][] distances = new Float[features.length][];
+		
+		int centroidNum = centroids.size();
+		for (int i = 0; i < features.length; i++) {
+			Iterator<Centroid> centroIt = centroids.iterator();
+			distances[i] = new Float[centroidNum];
+			Arrays.fill(distances[i], 0.0f);
+			for (int k = 0; k < centroidNum; ++k) {
+				Centroid centroid = centroIt.next();
+				for (int j = 0; j < features[i].length; j++) {
+					float[] coordinates = centroid.getCoordinates();
+					distances[i][k] += (features[i][j] - coordinates[j]) * (features[i][j]- coordinates[j]);
+				}
+				distances[i][k] = (float) Math.sqrt(distances[i][k]);
+			}
+		}
+		return distances;
+	}
 	
 	//Normalize the vector values 
 	private float[] getNormalizedVector(float[] vector, float norm) {

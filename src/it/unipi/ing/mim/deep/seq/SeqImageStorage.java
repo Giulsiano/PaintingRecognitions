@@ -12,6 +12,7 @@ import java.nio.file.Path;
 
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_features2d.Feature2D;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
@@ -25,8 +26,8 @@ public class SeqImageStorage {
 
 	public void extractFeatures(Path imgFolder) throws FileNotFoundException{
 		String filename = imgFolder.toString();
-		KeyPointsDetector detector = new KeyPointsDetector();
-		FeaturesExtraction extractor = new FeaturesExtraction();
+		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
+		Feature2D detector = extractor.getDescExtractor();
 		int i = 0;
 		try {
 			// For each directory into the main image directory
@@ -39,7 +40,8 @@ public class SeqImageStorage {
 					if (filename.toLowerCase().endsWith(".jpg")) {
 						// Compute the descriptors of the image
 						Mat image = imread(filename);
-						KeyPointVector keypoints = detector.detectKeypoints(image);
+						KeyPointVector keypoints = new KeyPointVector();
+						detector.detect(image, keypoints);
 						Mat descriptor = extractor.extractDescriptor(image, keypoints);
 
 						// Store on file each descriptor's feature normalized. ImgDescriptor normalize

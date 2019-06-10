@@ -11,7 +11,8 @@ import org.bytedeco.opencv.opencv_core.DMatchVector;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 
-import it.unipi.ing.mim.main.Parameters;
+import it.unipi.ing.mim.deep.Parameters;
+
 
 public class FeaturesMatchingFiltered {
 	

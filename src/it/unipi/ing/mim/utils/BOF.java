@@ -17,35 +17,36 @@ import java.util.AbstractMap.SimpleEntry;
 public class BOF {
 	private static String DELIMITER = " ";
 	
-	public static Map<String, SimpleEntry<Integer, Integer>[]> getPostingLists (Mat labels, int numClusters, List<String> imgIds){
-		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = new HashMap<>(labels.rows(), 1.0f);
+	public static Map<String, SimpleEntry<Integer, Integer>[]> getPostingLists (Mat labels, int numClusters, List<Integer> keypointPerImage, List<String> imgIds){
 		IntRawIndexer labelIdx = labels.createIndexer();
+		long labelRows = labelIdx.rows();
+		int nimgs = keypointPerImage.size();
+		long labelPerImage = labelRows/nimgs; 
 		int start = 0;
+		int end = 0;
 		
-		// TODO C'è da vedere di non usare qui Parameters
-		int end = start + Parameters.RANDOM_KEYPOINT_NUM;
-		int nimgs = labels.rows() / Parameters.RANDOM_KEYPOINT_NUM;
+		// For each image compute the posting list associated to it, that is the list
+		// (image name, array of couple (clusterId, frequency of cluster)
+		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = new HashMap<>(nimgs, 1.0f);
 		Iterator<String> imgIdsIt = imgIds.iterator();
 		for (int i = 0; i < nimgs; ++i) {
 			SimpleEntry<Integer, Integer>[] clusterFrequencies = (SimpleEntry<Integer, Integer>[]) new SimpleEntry[numClusters];
 			int[] frequencies = new int[numClusters];
 			Arrays.fill(frequencies, 0);
+			
+			// Compute histogram/frequencies per cluster
+			end += Math.min(keypointPerImage.get(i), labelPerImage);
 			for (int j = start; j < end; ++j) {
 				++frequencies[labelIdx.get(j)];
 			}
 			start = end;
-			end += Parameters.RANDOM_KEYPOINT_NUM;
 			
-			// Ordering couples (clusterID, frequency of cluster)
+			// Ordering (clusterID, frequency of cluster) descendently, so there are first more 
+			// frequent clusters 
 			for (int j = 0; j < frequencies.length; ++j) 
 				clusterFrequencies[j] = new SimpleEntry<Integer, Integer>(j, frequencies[j]);
-			
-			// Order them decrescently
-			Arrays.parallelSort(clusterFrequencies, 
-					    		Comparator.comparing(SimpleEntry::getValue, 
-													 Comparator.reverseOrder())
-					    		);
-			
+			Arrays.sort(clusterFrequencies, Comparator.comparing(SimpleEntry::getValue, 
+																 Comparator.reverseOrder()));
 			// Put ordered posting lists into the map
 			if (imgIdsIt.hasNext()) postingLists.put(imgIdsIt.next(), clusterFrequencies);
 		}

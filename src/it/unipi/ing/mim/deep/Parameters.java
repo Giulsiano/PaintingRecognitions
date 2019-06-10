@@ -49,7 +49,7 @@ public class Parameters {
 	public static final File POSTING_LISTS_FILE =  new File("posting_lists.dat");
 	
 	// Where are images to be indexed
-	public static final Path imgDir = FileSystems.getDefault().getPath("wikiartDEBUG");
+	public static final Path imgDir = FileSystems.getDefault().getPath("./wikiartDEBUG");
 	
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 35;

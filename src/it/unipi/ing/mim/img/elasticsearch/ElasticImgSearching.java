@@ -59,9 +59,11 @@ public class ElasticImgSearching implements AutoCloseable {
 		// Read the image to search and extract its feature
 		Mat img = imread(image);
 		ElasticImgSearching eis = new ElasticImgSearching(Parameters.TOP_K_QUERY);
-		KeyPointsDetector detector = new KeyPointsDetector();		
-		KeyPointVector keypoints = detector.detectKeypoints(img);
+		
 		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
+		KeyPointVector keypoints = new KeyPointVector(); 
+		extractor.getDescExtractor().detect(img, keypoints);
+		
 		Mat queryDesc = extractor.extractDescriptor(img, keypoints);
 		ImgDescriptor query = new ImgDescriptor(MatConverter.mat2float(queryDesc), image);
 		

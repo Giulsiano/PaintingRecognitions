@@ -14,7 +14,7 @@ public class Main {
 		String ans = "r";//lineReader.next();
 		//lineReader.close();
 		if (ans.toLowerCase().equals("r")) {
-			ElasticImgSearching.search("testImgs\\ni-zan\\autumn-wind-in-gemstones-trees.jpg");
+			ElasticImgSearching.search("./testImgs/ni-zan/autumn-wind-in-gemstones-trees.jpg");
 		}
 		else if (ans.toLowerCase().equals("i")) {
 			ElasticImgIndexing.indexAll(args);

@@ -34,6 +34,7 @@ public class SeqImageStorage {
 			ObjectOutputStream ois = new ObjectOutputStream(new FileOutputStream(descFile));
 			for (Path dir : Files.newDirectoryStream(imgFolder)) {
 				
+				if(!dir.toString().endsWith(".DS_Store")) {
 				// For each file into the directory
 				for (Path file : Files.newDirectoryStream(dir)) {
 					filename = file.toString();
@@ -57,12 +58,14 @@ public class SeqImageStorage {
 						ois.writeObject(ids);
 					}
 				}
+			}
 				ois.flush();
 			}
 			ois.close();
 		}
 		catch (IOException e) {
 			System.out.println("IOException for " + filename);
+			System.err.println(e.getLocalizedMessage());
 		}
 	}
 }

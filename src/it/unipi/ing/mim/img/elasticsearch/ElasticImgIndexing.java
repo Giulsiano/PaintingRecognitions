@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -40,7 +39,6 @@ import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.seq.SeqImageStorage;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
 import it.unipi.ing.mim.main.Centroid;
-import it.unipi.ing.mim.main.Main;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
 
@@ -55,7 +53,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	
 	private RestHighLevelClient client;
 
-	//TODO
+	@SuppressWarnings("unchecked")
 	public ElasticImgIndexing(File postingListFile, int topKIdx) throws IOException, ClassNotFoundException {
 		//Initialize pivots, imgDescDataset, REST
 		this.postingListDataset = (Map<String, SimpleEntry<Integer, Integer>[]>) StreamManagement.load(postingListFile, Map.class);
@@ -64,6 +62,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	    client = new RestHighLevelClient(builder);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static void indexAll(String[] args) throws Exception {
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
@@ -81,20 +80,8 @@ public class ElasticImgIndexing implements AutoCloseable {
 			centroidList = (List<Centroid>) StreamManagement.load(pivotFile, List.class);
 		}
 		catch (FileNotFoundException e) {
-			// Compute centroids with kmeans
-			centroidList = new LinkedList<Centroid>();
-			System.out.println("Running kmeans by using OpenCV");
-			Mat[] kmeansResults = computeKMeans(descFile);
-			Mat centroids = kmeansResults[0];
-			labels = kmeansResults[1];
-			
-			// Store it for quickly access them on a second run of this program
-			System.out.println("Storing centroids to disk");
-			int rows = centroids.rows();
-			for (int i = 0; i < rows; i ++) {
-				Centroid c = new Centroid(centroids.row(i), i);
-				centroidList.add(c);
-			}
+			// Compute centroids and store them to the disk
+			centroidList = computeClusterCentres(descFile, labels);
 			StreamManagement.store(centroidList, pivotFile);
     		StreamManagement.store(MatConverter.mat2int(labels), labelFile);
 		}
@@ -128,7 +115,24 @@ public class ElasticImgIndexing implements AutoCloseable {
 		}
 	}
 	
-	private static List<String> getImagesName (File file) throws FileNotFoundException, IOException, ClassNotFoundException{
+	private static List<Centroid> computeClusterCentres (File descFile, Mat labels) throws Exception{
+		System.out.println("Computing clusters for the dataset");
+		List<Centroid> centroidList = new LinkedList<Centroid>();
+		Mat[] kmeansResults = computeKMeans(descFile);
+		Mat centroids = kmeansResults[0];
+		labels = kmeansResults[1];
+		
+		// Store it for quickly access them on a second run of this program
+		System.out.println("Storing centroids to disk");
+		int rows = centroids.rows();
+		for (int i = 0; i < rows; i ++) {
+			Centroid c = new Centroid(centroids.row(i), i);
+			centroidList.add(c);
+		}
+		return centroidList;
+	}
+	
+	private static List<String> readImagesNameFrom (File file) throws FileNotFoundException, IOException, ClassNotFoundException{
 		List<String> imgIds = new LinkedList<String>();
 		
 		// For memory usage problem we have to read one descriptor at a time instead of the whole file
@@ -169,9 +173,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 							--i;
 						}
 					}
-					
-					// Make the matrix of whole features by taking random rows from the feature 
-					// matrix
+					// Make the matrix of whole features by taking random rows from the feature matrix
 					randomRows.forEach((randRow) -> { bigmat.push_back(featMat.row(randRow)); } );
 				}
 				catch (EOFException e) { 
@@ -188,7 +190,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		Mat labels = new Mat();
 		Mat centroids = new Mat();
 		TermCriteria criteria = new TermCriteria(CV_32F, 100, 1.0d);
-		kmeans(bigmat, Parameters.NUM_KMEANS_CLUSTER, labels, criteria, 1, Core.KMEANS_PP_CENTERS, centroids);
+		kmeans(bigmat, Parameters.NUM_KMEANS_CLUSTER, labels, criteria, 10, Core.KMEANS_PP_CENTERS, centroids);
 		
 		// Put results of kmea-s into an array and return it
 		Mat[] results = new Mat[2];

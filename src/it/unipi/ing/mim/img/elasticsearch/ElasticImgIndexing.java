@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.ConnectException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -58,9 +59,9 @@ public class ElasticImgIndexing implements AutoCloseable {
 		this.postingListDataset = (Map<String, SimpleEntry<Integer, Integer>[]>) StreamManagement.load(postingListFile, Map.class);
 		this.topKIdx = topKIdx;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
-	    client = new RestHighLevelClient(builder);
+		client = new RestHighLevelClient(builder);
 	}
-	
+		
 	public static void indexAll(String[] args) throws Exception {
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
@@ -181,7 +182,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	}
 	
 	//TODO
-	public void createIndex() throws IOException {
+	public void createIndex() throws IOException, ConnectException {
 		try {
 			GetIndexRequest requestdel = new GetIndexRequest(Parameters.INDEX_NAME);
 			// If the index already exists
@@ -201,8 +202,8 @@ public class ElasticImgIndexing implements AutoCloseable {
 					            .put("analysis.analyzer.first.type", "whitespace");
 			request.settings(s);
 			idx.create(request, RequestOptions.DEFAULT);
-		}catch(Exception e) {
-			System.out.println("Index \'" + Parameters.INDEX_NAME +"\' already exists");
+		}catch(ConnectException e) {
+			System.err.println("ElasticSearch server not running!");
 		}
 	}
 	
@@ -213,7 +214,9 @@ public class ElasticImgIndexing implements AutoCloseable {
 				IndexRequest request = composeRequest(imgId, temp);
 				try {
 					client.index(request, RequestOptions.DEFAULT);
-				} catch (IOException e) {
+				} catch(ConnectException e) {
+					System.err.println("ElasticSearch server not running!");
+				}catch (IOException e) {
 					e.printStackTrace();
 				}
 			}

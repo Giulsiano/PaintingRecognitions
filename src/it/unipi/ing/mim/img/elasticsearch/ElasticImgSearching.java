@@ -2,19 +2,16 @@ package it.unipi.ing.mim.img.elasticsearch;
 
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.AbstractMap.SimpleEntry;
 
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -31,11 +28,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.Parameters;
-import it.unipi.ing.mim.deep.tools.Output;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.KeyPointsDetector;
@@ -50,31 +44,30 @@ public class ElasticImgSearching implements AutoCloseable {
 	private static String PROTOCOL = "http";
 	private RestHighLevelClient client;
 	
-	private int topKSearch;
-	
-	//optional
-	private Map<String, ImgDescriptor> imgDescMap;
 	
 	public static void search(String image) throws Exception {
 		// Read the image to search and extract its feature
 		Mat img = imread(image);
 		ElasticImgSearching eis = new ElasticImgSearching(Parameters.TOP_K_QUERY);
-		KeyPointsDetector detector = new KeyPointsDetector();		
-		KeyPointVector keypoints = detector.detectKeypoints(img);
 		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
+		KeyPointVector keypoints = new KeyPointVector(); 
+		extractor.getDescExtractor().detect(img, keypoints);
+		
 		Mat queryDesc = extractor.extractDescriptor(img, keypoints);
 		ImgDescriptor query = new ImgDescriptor(MatConverter.mat2float(queryDesc), image);
 		
-		
+		// Make the search by computing the bag of feature of the query
 		String bofQuery = BOF.features2Text(eis.computeClusterFrequencies(query), Parameters.TOP_K_QUERY);
 		List<String> neighbours = eis.search(bofQuery, Parameters.K);
+		
+		// Compute ORB features for query and images
+		
 //		Output.toHTML(neighbours, Parameters.BASE_URI, Parameters.RESULTS_HTML_REORDERED);
 	}
 		
 	//TODO
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
 		//Initialize pivots, imgDescMap, REST
-		this.topKSearch = topKSearch;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
 	}
@@ -101,6 +94,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		for (int i = 0; i < hits.length; i++) {
 			Map<String, Object> metadata = hits[i].getSourceAsMap();
 			String id =  (String) metadata.get(Fields.ID);
+			System.out.println("img: " + id + "\n Score: " + hits[i].getScore() );
 			res.add(id);
 		}
 		return res;

@@ -25,6 +25,8 @@ import it.unipi.ing.mim.utils.MatConverter;
 public class SeqImageStorage {
 	
 	private final File descFile = Parameters.DESCRIPTOR_FILE;
+	private List<String> imageNames = new LinkedList<String>();
+	private List<Integer> keypointPerImage = new LinkedList<Integer>();
 
 	public void extractFeatures(Path imgFolder) throws FileNotFoundException{
 		String filename = imgFolder.toString();
@@ -52,13 +54,15 @@ public class SeqImageStorage {
 								System.err.println("!!!! "+ filename + ": Problem computing features. Features' matrix is empty");
 								continue;
 							}
-							ImgDescriptor ids = new ImgDescriptor(features, filename);
-							ids.setId(filename);
-							ois.writeObject(ids);
+							// Save image name and number of extracted features
+							keypointPerImage.add(features.length);
+							imageNames.add(filename.toString());
+							ois.writeObject(new ImgDescriptor(features, filename));
+							ois.flush();
+							System.gc();
 						}
 					}
 				}
-				ois.flush();
 			}
 		}
 		catch (IOException e) {
@@ -66,5 +70,13 @@ public class SeqImageStorage {
 			System.err.println(e.getLocalizedMessage());
 			e.printStackTrace();
 		}
+	}
+
+	public List<String> getImageNames() {
+		return imageNames;
+	}
+
+	public List<Integer> getKeypointPerImage() {
+		return keypointPerImage;
 	}
 }

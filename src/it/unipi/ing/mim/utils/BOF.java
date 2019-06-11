@@ -10,7 +10,7 @@ import java.util.Map;
 import org.bytedeco.javacpp.indexer.IntRawIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
 
-import it.unipi.ing.mim.deep.Parameters;
+import it.unipi.ing.mim.main.Parameters;
 
 import java.util.AbstractMap.SimpleEntry;
 

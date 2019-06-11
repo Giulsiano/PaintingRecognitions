@@ -1,50 +1,39 @@
 package it.unipi.ing.mim.features;
 
-import static org.bytedeco.opencv.global.opencv_features2d.drawKeypoints;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.imshow;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
-import static org.bytedeco.opencv.global.opencv_features2d.DRAW_RICH_KEYPOINTS;
-
-import org.bytedeco.opencv.opencv_core.KeyPoint;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.Point2f;
-import org.bytedeco.opencv.opencv_core.Scalar;
 import org.bytedeco.opencv.opencv_features2d.Feature2D;
 import org.bytedeco.opencv.opencv_features2d.ORB;
+import org.bytedeco.opencv.opencv_xfeatures2d.SIFT;
+
+import it.unipi.ing.mim.main.Parameters;
 
 public class KeyPointsDetector {
 
-	private Feature2D detector;
+	public static final int SIFT_FEATURES = 1;
+	public static final int ORB_FEATURES = 2;
 	public static int MAX_FEATURE = 1000;
-
-	public static void main(String[] args) throws Exception {
-		
-		Mat img = imread("data/img/figure-at-a-window.jpg");
-		System.out.println("image1.type="+org.opencv.core.CvType.typeToString(img.type()));
-
-		
-		KeyPointsDetector detector = new KeyPointsDetector();
-		
-		KeyPointVector keypoints = detector.detectKeypoints(img);
-		detector.printKeyPointsValues(keypoints);
-
-		Mat outImage = new Mat();
-//		drawKeypoints(img, keypoints, outImage, new Scalar(255,0,0, 0), DrawMatchesFlags.DRAW_RICH_KEYPOINTS);
-		drawKeypoints(img, keypoints, outImage);
-		
-		imshow("Keypoint Size and Orientation", outImage);
-		waitKey();
-		destroyAllWindows();
+	
+	private Feature2D detector;
+	
+	public Feature2D getKeypointDetector () {
+		return detector;
 	}
 	
-	//
-	public KeyPointsDetector() {
-		//initialize detector
-		detector = ORB.create();
-		((ORB) detector).setMaxFeatures(MAX_FEATURE);
+	public KeyPointsDetector(int featureType) {
+		switch (featureType) {
+		case SIFT_FEATURES:
+			detector = SIFT.create();
+			break;
+
+		case ORB_FEATURES:
+			detector = ORB.create();
+			((ORB) detector).setMaxFeatures(Parameters.ORB_MAX_FEATURE);
+			break;
+
+		default:
+			throw new IllegalArgumentException("Feature extractor not recognized");
+		}
 	}
 
 	//
@@ -54,19 +43,4 @@ public class KeyPointsDetector {
 		if (detector != null) detector.detect(img, keyPoints);
 		return keyPoints;
 	}
-
-	//
-	public void printKeyPointsValues(KeyPointVector keypoints) {
-		//Print keypoint data for each keypoint: x, y, size and angle
-		long numel = keypoints.size();
-		for(long i = 0; i < numel; ++i) {
-			KeyPoint keypoint = keypoints.get(i);
-			System.out.printf("(%f, %f) size: %f, angle: %f\n", keypoint.pt().x(),
-					                                           keypoint.pt().y(),
-					                                           keypoint.size(),
-					                                           keypoint.angle()
-					         );
-		}
-	}
-
 }

@@ -34,15 +34,16 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import com.sun.org.apache.bcel.internal.generic.BASTORE;
-
 import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.deep.Parameters;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
+import it.unipi.ing.mim.features.BoundingBox;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.FeaturesMatching;
 import it.unipi.ing.mim.features.FeaturesMatchingFiltered;
+import it.unipi.ing.mim.features.KeyPointsDetector;
+import it.unipi.ing.mim.features.Ransac;
 import it.unipi.ing.mim.main.Centroid;
+import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
 
@@ -56,23 +57,21 @@ public class ElasticImgSearching implements AutoCloseable {
 	public void search(String image) throws Exception {
 		// Read the image to search and extract its feature
 		Mat queryImg = imread(image);
-		ElasticImgSearching eis = new ElasticImgSearching(Parameters.TOP_K_QUERY);
-		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
-		KeyPointVector keypoints = new KeyPointVector();
-		extractor.getDescExtractor().detect(queryImg, keypoints);
-		
+		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
+		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
+		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
 		Mat queryDesc = extractor.extractDescriptor(queryImg, keypoints);
 		ImgDescriptor query = new ImgDescriptor(MatConverter.mat2float(queryDesc), image);
 
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(eis.computeClusterFrequencies(query), Parameters.K);
-		List<String> neighbours = eis.search(bofQuery, Parameters.K);
-		eis.close();
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.K);
+		List<String> neighbours = search(bofQuery, Parameters.K);
+		close();
 		
 		// Compute ORB features for query
-		extractor = new FeaturesExtraction(FeaturesExtraction.ORB_FEATURES);
-		KeyPointVector qryKeypoints = new KeyPointVector();
-		extractor.getDescExtractor().detect(queryImg, qryKeypoints);
+		detector = new KeyPointsDetector(KeyPointsDetector.ORB_FEATURES);
+		extractor = new FeaturesExtraction(detector.getKeypointDetector());
+		KeyPointVector qryKeypoints = detector.detectKeypoints(queryImg);
 		queryDesc = extractor.extractDescriptor(queryImg, qryKeypoints);
 		
 		// Compute ORB features for each neighbour and 
@@ -81,8 +80,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		List<SimpleEntry<String, DMatchVector>> goodMatches = new LinkedList<>();
 		for (String neighbourName : neighbours) {
 			Mat img = imread(neighbourName);
-			keypoints = new KeyPointVector();
-			extractor.getDescExtractor().detect(img, keypoints);
+			keypoints = detector.detectKeypoints(img);
 			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
 			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
 			DMatchVector filteredMatches = filter.filterMatches(matches, Parameters.MAX_DISTANCE_THRESHOLD);
@@ -101,10 +99,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		}
 		if (bestGoodMatch != null) {
 			Mat bestImg = imread(bestGoodMatch.getKey());
-			keypoints = new KeyPointVector();
-			extractor.getDescExtractor().detect(bestImg, keypoints);
-			Mat imgFeatures = extractor.extractDescriptor(bestImg, keypoints);
-			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
+			keypoints = detector.detectKeypoints(bestImg);
 			Mat imgMatches = new Mat();
 			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
 			imshow("Test matching", imgMatches);

@@ -112,25 +112,13 @@ public class ElasticImgSearching implements AutoCloseable {
 			destroyAllWindows();
 		}
 		else System.err.println("No good matches found for " + image);
-		
-//		Output.toHTML(neighbours, Parameters.BASE_URI, Parameters.RESULTS_HTML_REORDERED);
-		
-	}
-		
-	//TODO
-	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
-		//Initialize pivots, imgDescMap, REST
-		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
-	    client = new RestHighLevelClient(builder);
 	}
 	
-	//TODO
 	public void close () throws IOException {
 		//close REST client
 		client.close();
 	}
 	
-	//TODO
 	public List<String> search (String queryString, int k) throws ParseException, IOException, ClassNotFoundException{
 		List<String> res = new LinkedList<String>();
 
@@ -140,7 +128,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		//perform elasticsearch search
 		SearchResponse searchResponse = client.search(searchReq, RequestOptions.DEFAULT);
 		SearchHit[] hits = searchResponse.getHits().getHits();
-		client.close();
 		
 		res = new ArrayList<>(hits.length);	
 		for (int i = 0; i < hits.length; i++) {
@@ -152,7 +139,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		return res;
 	}
 	
-	//TODO
 	private SearchRequest composeSearch (String query, int k) {
 		QueryBuilder queryBuild = QueryBuilders.multiMatchQuery(query, Fields.IMG);
 		SearchSourceBuilder sb = new SearchSourceBuilder();
@@ -166,7 +152,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		return searchRequest;
 	}
 	
-	//TODO
 	public List<ImgDescriptor> reorder (ImgDescriptor queryF, List<ImgDescriptor> res) throws IOException, ClassNotFoundException {
 		//for each result evaluate the distance with the query, call  setDist to set the distance, then sort the results
 		for(ImgDescriptor imgDescTemp: res) {
@@ -177,6 +162,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		return res;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query) throws FileNotFoundException, ClassNotFoundException, IOException {
 		// Read centroids, compute distances of query to each of them
 		List<Centroid> centroidList = (List<Centroid>) StreamManagement.load(Parameters.PIVOTS_FILE, List.class);
@@ -205,7 +191,8 @@ public class ElasticImgSearching implements AutoCloseable {
 
 		// Create the posting list
 		int numClusters = centroidList.size();
-		SimpleEntry<Integer, Integer>[] clusterFrequencies = (SimpleEntry<Integer, Integer>[]) new SimpleEntry[numClusters];
+		SimpleEntry<Integer, Integer>[] clusterFrequencies = 
+				(SimpleEntry<Integer, Integer>[]) new SimpleEntry[numClusters];
 		for (int i = 0; i < frequencies.length; ++i) {
 			clusterFrequencies[i] = new SimpleEntry<Integer, Integer>(i, frequencies[i]);
 		}

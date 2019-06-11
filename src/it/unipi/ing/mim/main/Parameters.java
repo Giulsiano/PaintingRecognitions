@@ -1,4 +1,4 @@
-package it.unipi.ing.mim.deep;
+package it.unipi.ing.mim.main;
 
 import java.io.File;
 import java.nio.file.FileSystems;
@@ -54,10 +54,14 @@ public class Parameters {
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 35;
 	public static final Integer NUM_KMEANS_CLUSTER = 10;	// TODO Ricorda di cambiarlo
+	public static final int MIN_RANSAC_INLIERS = 12;
+	public static final int MIN_GOOD_MATCHES = 10;
+	public static final double RANSAC_PX_THRESHOLD = 1.0;
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
 	public static final int RANDOM_KEYPOINT_NUM = 100;
 	
 	// ORB feature extraction parameters
 	public static final int ORB_MAX_FEATURE = 1000;
+
 }

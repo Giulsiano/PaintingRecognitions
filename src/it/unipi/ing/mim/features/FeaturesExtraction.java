@@ -18,20 +18,7 @@ public class FeaturesExtraction {
 	public static final int SIFT_FEATURES = 1;
 	public static final int ORB_FEATURES = 2;
 	KeyPointsDetector detector = new KeyPointsDetector();
-	public static void main(String[] args) throws Exception {
 
-		Mat img = imread("data/img/figure-at-a-window.jpg");
-
-		KeyPointsDetector detector = new KeyPointsDetector();		
-		KeyPointVector keypoints = detector.detectKeypoints(img);
-		
-		FeaturesExtraction extractor = new FeaturesExtraction(SIFT_FEATURES);
-		Mat descQuery = extractor.extractDescriptor(img, keypoints);
-
-		extractor.printFeatureValues(descQuery);
-	}
-
-	//TODO
 	public FeaturesExtraction(int featureType) {
 		//initialize descExtractor;
 		switch (featureType) {
@@ -53,7 +40,6 @@ public class FeaturesExtraction {
 		return descExtractor;
 	}
 
-	//TODO
 	public Mat extractDescriptor(Mat img, KeyPointVector keypoints) {
 		//extract the visual features
 		Mat descriptor = new Mat();
@@ -61,7 +47,6 @@ public class FeaturesExtraction {
 		return descriptor;
 	}
 
-	//TODO
 	public void printFeatureValues(Mat descQuery) {
 		//Print the feature data
 		FloatRawIndexer indexer = descQuery.createIndexer();

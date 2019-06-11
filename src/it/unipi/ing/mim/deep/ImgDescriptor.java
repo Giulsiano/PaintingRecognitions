@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.bytedeco.javacpp.indexer.FloatRawIndexer;
+
 import it.unipi.ing.mim.main.Centroid;
 
 public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
@@ -29,7 +31,7 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 		}
 		this.id = id;
 	}
-
+	
 	public float[][] getFeatures() {
 		return features;
 	}

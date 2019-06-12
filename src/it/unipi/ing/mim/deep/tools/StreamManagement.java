@@ -1,8 +1,5 @@
 package it.unipi.ing.mim.deep.tools;
 
-import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.main.Centroid;
-
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,16 +8,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.glass.ui.CommonDialogs.Type;
-
-import java.util.AbstractMap.SimpleEntry;
-import java.util.HashMap;
-import java.util.LinkedList;
+import it.unipi.ing.mim.deep.ImgDescriptor;
 
 public class StreamManagement {
 	
@@ -67,24 +60,5 @@ public class StreamManagement {
 		 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(storageFile))) { 
         	oos.writeObject(ids);
 		 }
-	}
-	
-//	public static Map<String, SimpleEntry<Integer, Integer>[]> load (File postingListFile) throws FileNotFoundException, IOException, ClassNotFoundException{
-//		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(postingListFile))) {        
-//			return (Map<String, SimpleEntry<Integer, Integer>[]>) ois.readObject();	
-//		}
-//	}
-//	
-	public static void store(ImgDescriptor ids, File storageFile) throws IOException {
-		 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(storageFile))) { 
-        	oos.writeObject(ids);
-		 }
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static ImgDescriptor load(Path storageFile) throws IOException, ClassNotFoundException {
-		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(storageFile.toString()))) {        
-			return (ImgDescriptor) ois.readObject();	
-		}
 	}
 }

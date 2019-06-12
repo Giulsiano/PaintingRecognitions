@@ -23,8 +23,6 @@ public class Centroid implements Serializable{
 		this.id = id;
 	}
 	
-	
-	
 	public float[] getCoordinates() {
 		return coordinates;
 	}

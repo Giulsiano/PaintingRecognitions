@@ -14,7 +14,7 @@ public class Parameters {
 	public static final int IMG_HEIGHT = 227;
 	
 	//Image Source Folder
-	public static final File SRC_FOLDER = new File("data/img");
+	public static final File SRC_FOLDER = new File("wikiartDEBUG");
 	
 	//k-Nearest Neighbors
 	public static final int K = 10;
@@ -35,7 +35,7 @@ public class Parameters {
 	public static final String INDEX_NAME = "painting";
 	
 	//HTML Output Parameters
-	public static final  String BASE_URI = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/";
+	public static final String BASE_URI = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/";
 	public static final File RESULTS_HTML = new File("out/deep.seq.html");
 	public static final File RESULTS_HTML_ELASTIC = new File("out/deep.elastic.html");
 	public static final File RESULTS_HTML_REORDERED = new File("out/deep.reordered.html");
@@ -47,6 +47,8 @@ public class Parameters {
 	public static final File LABEL_FILE = new File("labels.dat");
 	public static final File DESCRIPTOR_FILE = new File("descriptors.dat");
 	public static final File POSTING_LISTS_FILE =  new File("posting_lists.dat");
+	public static final File KEYPOINT_PER_IMAGE_FILE = new File("keyPerImage.dat");
+	public static final File IMAGE_NAMES_FILE =  new File("imageNames.dat");
 	
 	// Where are images to be indexed
 	public static final Path imgDir = FileSystems.getDefault().getPath("/Users/Maria/git/PaintingRecognitions/wikiart");

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import com.github.cliftonlabs.json_simple.JsonObject;
+
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
 import it.unipi.ing.mim.features.BoundingBox;
@@ -45,6 +48,7 @@ import it.unipi.ing.mim.main.Centroid;
 import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
+import it.unipi.ing.mim.utils.MetadataRetriever;
 
 public class ElasticImgSearching implements AutoCloseable {
 
@@ -61,15 +65,16 @@ public class ElasticImgSearching implements AutoCloseable {
 	    this.topKqry = topKSearch; 
 	}
 	
-	public void search(String image) throws Exception {
+	public void search (String image) throws Exception {
 		// Read the image to search and extract its feature
+		MatConverter matConverter = new MatConverter();
 		Mat queryImg = imread(image);
 
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
 		Mat queryDesc = extractor.extractDescriptor(queryImg, keypoints);
-		ImgDescriptor query = new ImgDescriptor(MatConverter.mat2float(queryDesc), image);
+		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), image);
 
 		// Make the search by computing the bag of feature of the query
 		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.K);
@@ -115,14 +120,17 @@ public class ElasticImgSearching implements AutoCloseable {
 			}
 		}
 		if (bestGoodMatch != null) {
-			Mat bestImg = imread(bestGoodMatch.getKey());
-			keypoints = detector.detectKeypoints(bestImg);
-			Mat imgMatches = new Mat();
-			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
-			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
-			BoundingBox.imshow("RANSAC", imgMatches);
-			waitKey();
-			destroyAllWindows();
+			JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
+			
+			
+//			Mat bestImg = imread(bestGoodMatch.getKey());
+//			keypoints = detector.detectKeypoints(bestImg);
+//			Mat imgMatches = new Mat();
+//			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
+//			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
+//			BoundingBox.imshow("RANSAC", imgMatches);
+//			waitKey();
+//			destroyAllWindows();
 		}
 		else System.err.println("No good matches found for " + image);
 	}

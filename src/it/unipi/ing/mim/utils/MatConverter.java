@@ -9,7 +9,7 @@ import org.bytedeco.opencv.opencv_core.Mat;
 
 public class MatConverter {
 
-	public static float[][] mat2float (Mat mat){
+	public float[][] mat2float (Mat mat){
 		FloatRawIndexer idx = mat.createIndexer();
 		int rows = (int) idx.rows();
 		int cols = (int) idx.cols();
@@ -20,7 +20,7 @@ public class MatConverter {
 		return matrix;
 	}
 	
-	public static int[][] mat2int (Mat mat){
+	public int[][] mat2int (Mat mat){
 		IntRawIndexer idx = mat.createIndexer();
 		int rows = (int) idx.rows();
 		int cols = (int) idx.cols();
@@ -31,7 +31,7 @@ public class MatConverter {
 		return matrix;
 	}
 
-	public static Mat int2Mat (int[][] mat){
+	public Mat int2Mat (int[][] mat){
 		Mat matrix = new Mat(mat.length, mat[0].length, CV_32S);
 		IntRawIndexer idx = matrix.createIndexer();
 		int rows = (int) idx.rows();
@@ -41,7 +41,7 @@ public class MatConverter {
 		return matrix;
 	}
 	
-	public static Mat float2Mat (float[][] mat){
+	public Mat float2Mat (float[][] mat){
 		Mat matrix = new Mat(mat.length, mat[0].length, CV_32F);
 		FloatRawIndexer idx = matrix.createIndexer();
 		int rows = (int) idx.rows();

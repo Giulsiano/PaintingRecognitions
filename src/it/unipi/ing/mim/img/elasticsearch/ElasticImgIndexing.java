@@ -58,6 +58,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	
 	@SuppressWarnings("unchecked")
 	public void indexAll(String[] args) throws Exception {
+		MatConverter matConverter = new MatConverter();
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = Parameters.DESCRIPTOR_FILE;
@@ -78,20 +79,19 @@ public class ElasticImgIndexing implements AutoCloseable {
 			centroidList = computeClusterCentres(descFile);
 			labels = kmeansResults.getLabels();
 			StreamManagement.store(centroidList, pivotFile);
-    		StreamManagement.store(MatConverter.mat2int(labels), labelFile);
+    		StreamManagement.store(matConverter.mat2int(labels), labelFile);
 		}
 		// Load labels from disk
 		if (!centroidList.isEmpty()) {
 			System.out.println("Loaded centroids");
 			int[][] rawLabels = (int[][]) StreamManagement.load(labelFile, int[][].class);
-			labels = MatConverter.int2Mat(rawLabels);
+			labels = matConverter.int2Mat(rawLabels);
 			System.out.println("Loaded labels");
 		}
 		else {
 			System.err.println("No centroids have been found. Exiting.");
 			System.exit(1);
 		}
-		
 		// Create posting lists by counting frequencies of cluster per image
 		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 
 				BOF.getPostingLists(labels, centroidList.size(), indexing.getKeypointPerImage(), 
@@ -124,38 +124,25 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return centroidList;
 	}
 	
-	private Mat createKmeansData (File descriptorFile) {
+	private Mat createKmeansData (File descriptorFile) throws ClassNotFoundException {
 		// Get features randomly from each image
+		MatConverter matConverter = new MatConverter();
 		Mat bigmat = new Mat();
 		try {
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
 			while (true){
 				try {
 					// Read the matrix of features
-					float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
-					Mat featMat = MatConverter.float2Mat(feat);
-					int featRows = featMat.rows();
-					
-					// Get unique random numbers from RNG
-					Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
-					int times = Math.min(featRows, Parameters.RANDOM_KEYPOINT_NUM);
-					for (int i = 0; i < times; ++i) {
-						int randValue = (int) (Math.random() * featRows);
-						if (!randomRows.add(randValue)) --i;
-					}
-					// Make the matrix of whole features by taking random rows from the feature matrix
-					randomRows.forEach((randRow) -> { bigmat.push_back(featMat.row(randRow)); } );
+					float[][] feat = ((ImgDescriptor) StreamManagement.load(descriptorFile, ImgDescriptor.class)).getFeatures();
+					bigmat.push_back(matConverter.float2Mat(feat));
 				}
 				catch (EOFException e) { 
 					break;
 				}
 			}
-			ois.close();
 		}
-		catch (Exception e) {
+		catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
-		
 		return bigmat;
 	}
 	

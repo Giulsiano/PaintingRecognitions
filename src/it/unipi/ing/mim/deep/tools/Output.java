@@ -18,7 +18,7 @@ public class Output {
 	public static final int COLUMNS = 2;
 	
 	public static void main(String[] args) {
-		Map<String, String> m = new HashMap<String, String>();
+		Map<String, Object> m = new HashMap<>();
 		m.put(Fields.ARTIST_NAME, "John Smith");
 		m.put(Fields.TITLE, "John Smith");
 		m.put(Fields.YEAR, "Dumàn");
@@ -28,7 +28,7 @@ public class Output {
 		toHTML(m, qryUri, imgUri, outfile);
 	}
 	
-	public static void toHTML(Map<String, String> metadata, String qryURI, String imgURI, File outFile) {
+	public static void toHTML(Map<String, Object> metadata, String qryURI, String imgURI, File outFile) {
 		String html = "<html><head><title>Painting Recognition</title></head>\n" +
 					  "<body>\n<div align='center'\"><h1>Painting Recognition</h1></div>\n" +
 					  "<table align='center'>\n";
@@ -45,9 +45,9 @@ public class Output {
 					"' src='" + ((i == 0) ? qryURI : imgURI) + "'></td>\n";
 		}
 		html += "</tr>\n</table>\n";
-		html += "<div align='center' name=\"metadata\"><strong>Artist:</strong> "+ metadata.get(Fields.ARTIST_NAME) + "</br>" +
-				"<strong>Title:</strong> "+ metadata.get(Fields.TITLE) + "</br>" +
-				"<strong>Year:</strong> "+ metadata.get(Fields.YEAR) + "</br>" +
+		html += "<div align='center' name=\"metadata\"><strong>Artist:</strong> "+ (String) metadata.get(Fields.ARTIST_NAME) + "</br>" +
+				"<strong>Title:</strong> "+ (String) metadata.get(Fields.TITLE) + "</br>" +
+				"<strong>Year:</strong> "+ (String)  metadata.get(Fields.YEAR) + "</br>" +
 				"</div>";
 		html += "</body>\n</html>";
 		

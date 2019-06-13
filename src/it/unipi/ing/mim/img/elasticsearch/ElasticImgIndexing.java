@@ -4,8 +4,10 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +56,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		this.topKIdx = topKIdx;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
+	    
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -62,6 +65,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = Parameters.DESCRIPTOR_FILE;
+		// TODO Questo controllo non ha più senso dopo AppendableObjectOutputStream
 		if (!descFile.exists()) {
 			indexing.extractFeatures(Parameters.imgDir);
 		}
@@ -78,8 +82,8 @@ public class ElasticImgIndexing implements AutoCloseable {
 			// Compute centroids and store them to the disk
 			centroidList = computeClusterCentres(descFile);
 			labels = kmeansResults.getLabels();
-			StreamManagement.store(centroidList, pivotFile);
-    		StreamManagement.store(matConverter.mat2int(labels), labelFile);
+			StreamManagement.store(centroidList, pivotFile, List.class);
+    		StreamManagement.store(matConverter.mat2int(labels), labelFile, int[][].class);
 		}
 		// Load labels from disk
 		if (!centroidList.isEmpty()) {
@@ -98,7 +102,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 									indexing.getImageNames());
 		
 		// Save posting lists to file
-		StreamManagement.store(postingLists, Parameters.POSTING_LISTS_FILE);
+		StreamManagement.store(postingLists, Parameters.POSTING_LISTS_FILE, Map.class);
 
 		// Put images to the index
 		this.createIndex();
@@ -129,16 +133,18 @@ public class ElasticImgIndexing implements AutoCloseable {
 		MatConverter matConverter = new MatConverter();
 		Mat bigmat = new Mat();
 		try {
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
 			while (true){
 				try {
 					// Read the matrix of features
-					float[][] feat = ((ImgDescriptor) StreamManagement.load(descriptorFile, ImgDescriptor.class)).getFeatures();
+					float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
 					bigmat.push_back(matConverter.float2Mat(feat));
 				}
 				catch (EOFException e) { 
 					break;
 				}
 			}
+			ois.close();
 		}
 		catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();

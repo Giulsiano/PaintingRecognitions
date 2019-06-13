@@ -25,7 +25,6 @@ public class BoundingBox {
 
 		// System.out.println(i + " - " + p1.x() +"," + p1.y());
 		objCornersIdx.put(0, 0, new float[] { 0, 0 });
-
 		objCornersIdx.put(1, 0, new float[] { imgObject.cols(), 0 });
 		objCornersIdx.put(2, 0, new float[] { imgObject.cols(), imgObject.rows() });
 		objCornersIdx.put(3, 0, new float[] { 0, imgObject.rows() });

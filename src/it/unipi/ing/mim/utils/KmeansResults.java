@@ -14,7 +14,6 @@ public class KmeansResults {
 	private Mat centroids;
 	private Mat labels;
 	
-	
 	public KmeansResults(Mat features) {
 		this.features = features;
 	}

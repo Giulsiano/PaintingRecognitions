@@ -14,7 +14,7 @@ public class Parameters {
 	public static final int IMG_HEIGHT = 227;
 	
 	//Image Source Folder
-	public static final File SRC_FOLDER = new File("wikiartDEBUG");
+	public static final File SRC_FOLDER = new File("./");
 	
 	//k-Nearest Neighbors
 	public static final int K = 10;

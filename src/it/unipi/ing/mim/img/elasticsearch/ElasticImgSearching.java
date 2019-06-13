@@ -2,7 +2,6 @@ package it.unipi.ing.mim.img.elasticsearch;
 
 import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
 import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.imshow;
 import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
@@ -11,9 +10,7 @@ import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +71,10 @@ public class ElasticImgSearching implements AutoCloseable {
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
 		Mat queryDesc = extractor.extractDescriptor(queryImg, keypoints);
+		if (queryDesc.empty()) {
+			System.err.println("Query image is not a valid image for extracting features");
+			System.exit(1);
+		}
 		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
 
 		// Make the search by computing the bag of feature of the query
@@ -128,7 +129,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			
 			Mat imgMatches = new Mat();
 			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
-			BoundingBox.addBoundingBox(queryImg, imgMatches, bestHomography, 1);
+			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
 			BoundingBox.imshow("RANSAC", imgMatches);
 			waitKey();
 			destroyAllWindows();

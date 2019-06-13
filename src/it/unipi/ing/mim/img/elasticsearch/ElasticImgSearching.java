@@ -2,7 +2,6 @@ package it.unipi.ing.mim.img.elasticsearch;
 
 import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
 import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.imshow;
 import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
@@ -11,9 +10,7 @@ import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -75,12 +72,15 @@ public class ElasticImgSearching implements AutoCloseable {
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
 		Mat queryDesc = extractor.extractDescriptor(queryImg, keypoints);
+		if (queryDesc.empty()) {
+			System.err.println("Query image is not a valid image for extracting features");
+			System.exit(1);
+		}
 		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
 
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.K);
-		List<String> neighbours = search(bofQuery, Parameters.K);
-		close();
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry);
+		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
 		// Compute ORB features for query
 		detector = new KeyPointsDetector(KeyPointsDetector.ORB_FEATURES);
@@ -101,7 +101,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
  		}
 		
-		// Get the image with the great number of matches
+		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
 		long maxInliers = 0;
 		Ransac ransac = new Ransac(Parameters.RANSAC_PX_THRESHOLD);
 		Mat bestHomography = null;
@@ -130,7 +130,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			
 			Mat imgMatches = new Mat();
 			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
-			BoundingBox.addBoundingBox(queryImg, imgMatches, bestHomography, 1);
+			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
 			BoundingBox.imshow("RANSAC", imgMatches);
 			waitKey();
 			destroyAllWindows();
@@ -160,6 +160,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			System.out.println("img: " + id + "\n Score: " + hits[i].getScore() );
 			res.add(id);
 		}
+		client.close();
 		return res;
 	}
 	
@@ -174,16 +175,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		searchRequest.types("doc");
 		searchRequest.source(sb);
 		return searchRequest;
-	}
-	
-	public List<ImgDescriptor> reorder (ImgDescriptor queryF, List<ImgDescriptor> res) throws IOException, ClassNotFoundException {
-		//for each result evaluate the distance with the query, call  setDist to set the distance, then sort the results
-		for(ImgDescriptor imgDescTemp: res) {
-//			imgDescTemp.distance(queryF);
-		  }
-		
-		Collections.sort(res);
-		return res;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -205,14 +196,12 @@ public class ElasticImgSearching implements AutoCloseable {
 				}
 			}
 		}
-
 		// Compute frequencies of clusters the query belongs to
 		int[] frequencies = new int[centroidList.size()];
 		Arrays.fill(frequencies, 0);
 		for (int i = 0; i < qryLabel.length; ++i) {
 			++frequencies[qryLabel[i]];
 		}
-
 		// Create the posting list
 		int numClusters = centroidList.size();
 		SimpleEntry<Integer, Integer>[] clusterFrequencies = 
@@ -222,7 +211,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		}
 		Arrays.sort(clusterFrequencies, Comparator.comparing(SimpleEntry::getValue, 
 															 Comparator.reverseOrder()));
-
 		return clusterFrequencies;
 	}
 }

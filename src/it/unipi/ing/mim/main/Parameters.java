@@ -17,13 +17,14 @@ public class Parameters {
 	public static final File SRC_FOLDER = new File("./");
 	
 	//k-Nearest Neighbors
-	public static final int K = 10;
+	public static final int KNN = 10;
 	
 	//Pivots File
 	public static final File PIVOTS_FILE = new File("pivot.dat");
 	
+
 	//Number Of Pivots
-	//public static final int NUM_PIVOTS = 100;
+	public static final Integer NUM_KMEANS_CLUSTER = 100;	// TODO Ricorda di cambiarlo
 
 	//Top K pivots For Indexing
 	public static final int TOP_K_IDX = 10;
@@ -55,7 +56,6 @@ public class Parameters {
 	
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 35;
-	public static final Integer NUM_KMEANS_CLUSTER = 10;	// TODO Ricorda di cambiarlo
 	public static final int MIN_RANSAC_INLIERS = 12;
 	public static final int MIN_GOOD_MATCHES = 10;
 	public static final double RANSAC_PX_THRESHOLD = 1.0;

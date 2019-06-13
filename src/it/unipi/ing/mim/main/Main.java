@@ -13,15 +13,19 @@ public class Main {
 			String ans = (i == 0)? "i":"r"; 
 			//lineReader.next();
 			//lineReader.close();
-
+			
 			if (ans.toLowerCase().equals("r")) {
+				ElasticImgSearching eis = new ElasticImgSearching(Parameters.TOP_K_QUERY);
 				if(System.getProperty("os.name").startsWith("Windows"))
-					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("testImgs\\2.jpg");
+					eis.search("testImgs/2.jpg");
 				else
 					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("./testImgs/ni-zan/autumn-wind-in-gemstones-trees.jpg");
+				eis.close();
 			}
 			else if (ans.toLowerCase().equals("i")) {
-				new ElasticImgIndexing(Parameters.TOP_K_IDX).indexAll(args);;
+				ElasticImgIndexing eii = new ElasticImgIndexing(Parameters.TOP_K_IDX);
+				eii.indexAll(args);
+				eii.close();
 			}
 			else {
 				System.err.println("Not recognized option");

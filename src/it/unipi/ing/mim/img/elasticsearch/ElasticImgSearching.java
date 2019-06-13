@@ -105,6 +105,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		long maxInliers = 0;
 		Ransac ransac = new Ransac(Parameters.RANSAC_PX_THRESHOLD);
 		Mat bestHomography = null;
+		Mat bestImg=null;
+		KeyPointVector bestKeypoints=null;
 		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
 		for (SimpleEntry<String, DMatchVector> goodMatch : goodMatches) {
 			DMatchVector matches = goodMatch.getValue();
@@ -117,6 +119,8 @@ public class ElasticImgSearching implements AutoCloseable {
 					maxInliers = inliers;
 					bestGoodMatch = goodMatch;
 					bestHomography = ransac.getHomography();
+					bestImg= img;
+					bestKeypoints= keypoints;
 				}
 			}
 		}
@@ -125,11 +129,9 @@ public class ElasticImgSearching implements AutoCloseable {
 			String qryImagePath = Parameters.BASE_URI + qryImage;
 			String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
 			Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-			Mat bestImg = imread(bestGoodMatch.getKey());
-			keypoints = detector.detectKeypoints(bestImg);
 			
 			Mat imgMatches = new Mat();
-			drawMatches(queryImg, qryKeypoints, bestImg , keypoints, bestGoodMatch.getValue(), imgMatches);
+			drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
 			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
 			BoundingBox.imshow("RANSAC", imgMatches);
 			waitKey();

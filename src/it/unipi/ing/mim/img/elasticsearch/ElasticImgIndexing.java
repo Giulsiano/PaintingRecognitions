@@ -65,7 +65,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = Parameters.DESCRIPTOR_FILE;
-		// TODO Questo controllo non ha più senso dopo AppendableObjectOutputStream
 		if (!descFile.exists()) {
 			indexing.extractFeatures(Parameters.imgDir);
 		}
@@ -157,14 +156,18 @@ public class ElasticImgIndexing implements AutoCloseable {
 		client.close();
 	}
 	
+	public boolean isESIndexExist (String idxName) throws IOException {
+		GetIndexRequest requestdel = new GetIndexRequest(Parameters.INDEX_NAME);
+		return client.indices().exists(requestdel, RequestOptions.DEFAULT);
+	}
+	
 	public void createIndex() throws IOException {
 		try {
-			GetIndexRequest requestdel = new GetIndexRequest(Parameters.INDEX_NAME);
-			// If the index already exists
-			if(client.indices().exists(requestdel, RequestOptions.DEFAULT)) {
-				System.out.println("Delete index");
+			// If the index already exists delete it, then rebuild it
+			if(isESIndexExist(Parameters.INDEX_NAME)) {
+				System.out.println("Delete index " + Parameters.INDEX_NAME);
 				DeleteIndexRequest deleteInd = new DeleteIndexRequest(Parameters.INDEX_NAME);
-				AcknowledgedResponse deleteIndexResponse = client.indices().delete(deleteInd, RequestOptions.DEFAULT);
+				client.indices().delete(deleteInd, RequestOptions.DEFAULT);
 			}
 			
 			System.out.println("Create index");

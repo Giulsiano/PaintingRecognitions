@@ -24,7 +24,7 @@ public class Ransac {
 
 	private Mat homography;
 	private Mat inliers;
-	private double pxThreshold = 1.0;
+	private double pxThreshold;
 	
 	public Ransac (double pxThreshold) {
 		this.pxThreshold = pxThreshold;

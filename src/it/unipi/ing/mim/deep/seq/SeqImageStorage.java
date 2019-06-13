@@ -4,12 +4,15 @@ import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,13 +30,14 @@ import it.unipi.ing.mim.utils.MatConverter;
 
 public class SeqImageStorage {
 	
-	private final File descFile = Parameters.DESCRIPTOR_FILE;
+	private final File descriptorFile = Parameters.DESCRIPTOR_FILE;
+	private final File keypointFile = Parameters.KEYPOINT_PER_IMAGE_FILE;
+	private final File imageNameFile = Parameters.IMAGE_NAMES_FILE;
 	
 	private List<String> imageNames = new LinkedList<String>();
 	private List<Integer> keypointPerImage = new LinkedList<Integer>();
-
+	
 	public void extractFeatures(Path imgFolder) throws FileNotFoundException{
-		MatConverter matConverter = new MatConverter();
 		String filename = imgFolder.toString();
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
@@ -62,13 +66,13 @@ public class SeqImageStorage {
 							// Save image name and number of extracted features
 							keypointPerImage.add(features.length);
 							imageNames.add(filename.toString());
-							StreamManagement.store(new ImgDescriptor(features, filename), descFile);
+							StreamManagement.append(new ImgDescriptor(features, filename), descriptorFile, ImgDescriptor.class);
 						}
 					}
 				}
 			}
-			StreamManagement.store(keypointPerImage, Parameters.KEYPOINT_PER_IMAGE_FILE);
-			StreamManagement.store(imageNames, Parameters.IMAGE_NAMES_FILE);
+			StreamManagement.store(keypointPerImage, keypointFile, List.class);
+			StreamManagement.store(imageNames, imageNameFile, List.class);
 		}
 		catch (IOException e) {
 			System.err.println("IOException file " + filename);
@@ -82,18 +86,22 @@ public class SeqImageStorage {
 		float[][] randomFeatures = null;
 		if (descriptorRows > 0) {
 			MatConverter matConverter = new MatConverter();
-			
-			// Get unique random numbers from RNG
-			Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
-			long times = Math.min(descriptorRows, Parameters.RANDOM_KEYPOINT_NUM);
-			for (long i = 0; i < times; ++i) {
-				int randValue = (int) (Math.random() * descriptorRows);
-				if (!randomRows.add(randValue)) --i;
+			if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
+				randomFeatures = matConverter.mat2float(features);
 			}
-			// Make the matrix of whole features by taking random rows from the feature matrix
-			Mat featMat = new Mat();
-			randomRows.forEach((randRow) -> { featMat.push_back(features.row(randRow)); } );
-			randomFeatures = matConverter.mat2float(featMat);
+			else {
+				// Get unique random numbers from RNG
+				Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
+				long times = Parameters.RANDOM_KEYPOINT_NUM;
+				for (long i = 0; i < times; ++i) {
+					int randValue = (int) (Math.random() * descriptorRows);
+					if (!randomRows.add(randValue)) --i;
+				}
+				// Make the matrix of whole features by taking random rows from the feature matrix
+				Mat featMat = new Mat();
+				randomRows.forEach((randRow) -> { featMat.push_back(features.row(randRow)); } );
+				randomFeatures = matConverter.mat2float(featMat);				
+			}
 		}
 		return randomFeatures;
 	}
@@ -101,38 +109,46 @@ public class SeqImageStorage {
 	@SuppressWarnings("unchecked")
 	public List<String> getImageNames() throws FileNotFoundException, ClassNotFoundException, IOException {
 		if (imageNames == null && Parameters.IMAGE_NAMES_FILE.exists()) {
-			this.imageNames = (List<String>)StreamManagement.load(Parameters.IMAGE_NAMES_FILE, List.class);
+			this.imageNames = (List<String>)StreamManagement.load(imageNameFile, List.class);
 		}
 		else {
 			this.imageNames = new LinkedList<String>();
+			FileInputStream f = new FileInputStream(descriptorFile);
+			ObjectInputStream ois = new ObjectInputStream(f);
 			while (true) {
 				try {
-					ImgDescriptor descriptor = (ImgDescriptor) StreamManagement.load(descFile, ImgDescriptor.class);
+					ImgDescriptor descriptor = (ImgDescriptor) ois.readObject();
 					imageNames.add(descriptor.getId());
 				}
 				catch (EOFException e) {
 					break;
 				}
 			}
+			f.close();
+			ois.close();
 		}
 		return this.imageNames;
 	}
 
 	@SuppressWarnings("unchecked")
 	public List<Integer> getKeypointPerImage() throws FileNotFoundException, ClassNotFoundException, IOException {
-		if (keypointPerImage == null && Parameters.KEYPOINT_PER_IMAGE_FILE.exists()) {
-			this.keypointPerImage = (List<Integer>) StreamManagement.load(Parameters.KEYPOINT_PER_IMAGE_FILE, List.class);
-		}
-		else {
-			this.keypointPerImage = new LinkedList<Integer>();
-			while (true) {
-				try {
-					ImgDescriptor descriptor = (ImgDescriptor) StreamManagement.load(descFile, ImgDescriptor.class);
-					keypointPerImage.add(descriptor.getFeatures().length);
+		if (keypointPerImage == null ) {
+			if (keypointFile.exists()) {
+				this.keypointPerImage = (List<Integer>) StreamManagement.load(keypointFile, List.class);				
+			}
+			else {
+				this.keypointPerImage = new LinkedList<Integer>();
+				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
+				while (true) {
+					try {
+						ImgDescriptor descriptor = (ImgDescriptor) ois.readObject();
+						keypointPerImage.add(descriptor.getFeatures().length);
+					}
+					catch (EOFException e) {
+						break;
+					}
 				}
-				catch (EOFException e) {
-					break;
-				}
+				ois.close();
 			}
 		}
 		return keypointPerImage;

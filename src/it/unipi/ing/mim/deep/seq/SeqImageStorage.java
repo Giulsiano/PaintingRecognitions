@@ -104,7 +104,7 @@ public class SeqImageStorage {
 	
 	@SuppressWarnings("unchecked")
 	public List<String> getImageNames() throws FileNotFoundException, ClassNotFoundException, IOException {
-		if (imageNames == null) {
+		if (imageNames.isEmpty()) {
 			if (imageNameFile.exists()) {
 				this.imageNames = (List<String>)StreamManagement.load(imageNameFile, List.class);
 			}
@@ -128,7 +128,7 @@ public class SeqImageStorage {
 	
 	@SuppressWarnings("unchecked")
 	public List<Integer> getKeypointPerImage() throws FileNotFoundException, ClassNotFoundException, IOException {
-		if (keypointPerImage == null ) {
+		if (keypointPerImage.isEmpty() ) {
 			if (keypointFile.exists()) {
 				this.keypointPerImage = (List<Integer>) StreamManagement.load(keypointFile, List.class);				
 			}

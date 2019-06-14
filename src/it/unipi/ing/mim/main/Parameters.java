@@ -17,7 +17,7 @@ public class Parameters {
 	public static final File SRC_FOLDER = new File("./");
 	
 	//k-Nearest Neighbors
-	public static final int K = 30;
+	public static final int KNN = 30;
 	
 	//Pivots File
 	public static final File PIVOTS_FILE = new File("pivot.dat");
@@ -48,7 +48,7 @@ public class Parameters {
 	public static final File IMAGE_NAMES_FILE =  new File("imageNames.dat");
 	
 	// Where are images to be indexed
-	public static final Path imgDir = FileSystems.getDefault().getPath("./wikiartDEBUG");
+	public static final Path imgDir = FileSystems.getDefault().getPath("./wikiartVERA");
 	
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 34; // from 25 to 50
@@ -59,6 +59,8 @@ public class Parameters {
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
 	public static final int RANDOM_KEYPOINT_NUM = 200;
+	public static final int MIN_KEYPOINT_NUM = 200;
+	public static final float KEYPOINT_PERCENT = 0.10f;
 	
 	// ORB feature extraction parameters
 	public static final int ORB_MAX_FEATURE = 1000;

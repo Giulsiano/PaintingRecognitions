@@ -22,9 +22,6 @@ public class Parameters {
 	//Pivots File
 	public static final File PIVOTS_FILE = new File("pivot.dat");
 	
-	//Number Of Pivots
-	//public static final int NUM_PIVOTS = 100;
-
 	//Top K pivots For Indexing
 	public static final int TOP_K_IDX = 10;
 	

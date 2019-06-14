@@ -17,6 +17,7 @@ import java.util.AbstractMap.SimpleEntry;
 public class BOF {
 	private static String DELIMITER = " ";
 	
+	@SuppressWarnings("unchecked")
 	public static Map<String, SimpleEntry<Integer, Integer>[]> getPostingLists (Mat labels, int numClusters, List<Integer> keypointPerImage, List<String> imgIds){
 		IntRawIndexer labelIdx = labels.createIndexer();
 		long labelRows = labelIdx.rows();

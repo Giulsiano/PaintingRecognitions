@@ -44,6 +44,7 @@ import it.unipi.ing.mim.features.KeyPointsDetector;
 import it.unipi.ing.mim.features.Ransac;
 import it.unipi.ing.mim.main.Centroid;
 import it.unipi.ing.mim.main.Parameters;
+import it.unipi.ing.mim.main.RansacParameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
 import it.unipi.ing.mim.utils.MetadataRetriever;
@@ -56,8 +57,11 @@ public class ElasticImgSearching implements AutoCloseable {
 	private RestHighLevelClient client;
 	private int topKqry;
 	
+	private RansacParameters ransacParameters;
+	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
 		//Initialize pivots, imgDescMap, REST
+		ransacParameters = new RansacParameters();
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
 	    this.topKqry = topKSearch; 
@@ -200,13 +204,13 @@ public class ElasticImgSearching implements AutoCloseable {
 			keypoints = detector.detectKeypoints(img);
 			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
 			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
-			DMatchVector filteredMatches = filter.filterMatches(matches, Parameters.MAX_DISTANCE_THRESHOLD);
+			DMatchVector filteredMatches = filter.filterMatches(matches, ransacParameters.getDistanceThreshold());
 			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
  		}
 		
 		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
 		long maxInliers = 0;
-		Ransac ransac = new Ransac(Parameters.RANSAC_PX_THRESHOLD);
+		Ransac ransac = new Ransac(ransacParameters);
 		Mat bestHomography = null;
 		Mat bestImg=null;
 		KeyPointVector bestKeypoints=null;
@@ -228,10 +232,18 @@ public class ElasticImgSearching implements AutoCloseable {
 			}
 		}
 		if (bestGoodMatch != null) {
-		 return bestGoodMatch.getKey();
+			return bestGoodMatch.getKey();
 		}
 		else {
 			return null;
-			}
 		}
+	}
+
+	public RansacParameters getRansacParameters() {
+		return ransacParameters;
+	}
+
+	public void setRansacParameters(RansacParameters ransacParameters) {
+		this.ransacParameters = ransacParameters;
+	}
 }

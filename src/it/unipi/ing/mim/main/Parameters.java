@@ -48,8 +48,8 @@ public class Parameters {
 	public static final File IMAGE_NAMES_FILE =  new File("imageNames.dat");
 	
 	// Where are images to be indexed
-	public static final Path imgDir = FileSystems.getDefault().getPath("./wikiartVERA");
-	
+	public static final Path imgDir = FileSystems.getDefault().getPath("/Users/Maria/git/PaintingRecognitions/wikiart");
+
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 34; // from 25 to 50
 	public static final Integer NUM_KMEANS_CLUSTER = 100;	// TODO Ricorda di cambiarlo

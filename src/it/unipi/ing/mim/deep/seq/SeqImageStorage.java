@@ -42,6 +42,8 @@ public class SeqImageStorage {
 		// For each directory into the main image directory
 		try {
 			for (Path dir : Files.newDirectoryStream(imgFolder)) {
+
+
 				if(!dir.toString().endsWith(".DS_Store")) {
 					// For each file into the directory
 					for (Path file : Files.newDirectoryStream(dir)) {
@@ -67,13 +69,17 @@ public class SeqImageStorage {
 						}
 					}
 				}
+
 			}
 			StreamManagement.store(keypointPerImage, keypointFile, List.class);
 			StreamManagement.store(imageNames, imageNameFile, List.class);
 		}
+		
 		catch (IOException e) {
+
 			System.err.println("IOException file " + filename);
 			e.printStackTrace();
+
 		}
 	}
 	

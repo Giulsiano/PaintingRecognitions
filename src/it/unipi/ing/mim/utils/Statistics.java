@@ -3,19 +3,17 @@ package it.unipi.ing.mim.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import it.unipi.ing.mim.deep.seq.SeqImageStorage;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.main.RansacParameters;
@@ -103,7 +101,8 @@ public class Statistics {
 		TN=0;
 		FN=0;
 		tnImages=new LinkedList<>();
-		this.ransacParameter = ransacParameter;
+		tpImages=new LinkedList<>();
+		this.ransacParameter=ransacParameter;
 	}
 	
 	
@@ -147,19 +146,25 @@ public class Statistics {
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
-			
-            bestMatch=elasticImgSearch.search(currTPImg); 
-			//elasticImgSearch.close();
-			if(bestMatch == null) ++FN; 
-			else if(bestMatch.equals(currTPImg)) {
-				++TP;
+			bestMatch = elasticImgSearch.search(currTPImg);
+			if(bestMatch == null) ++FN;
+			else {
+				// In case there is a best match try to compare the last part of the image's path
+				String[] splitPath = bestMatch.split(File.pathSeparator);
+				bestMatch = splitPath[splitPath.length - 1];
+				splitPath = currTPImg.split(File.pathSeparator);
+				String currTPImgName = splitPath[splitPath.length - 1];
+				//elasticImgSearch.close();
+				if(bestMatch.equals(currTPImgName)) {
+					++TP;
+				}
+				else ++FP;
 			}
-			else ++FP;
 		}
 
-		for(String currTNimg : tnImages) {
+		for(String currTNImg : tnImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
-            bestMatch=elasticImgSearch.search(currTNimg); 
+            bestMatch=elasticImgSearch.search(currTNImg);
 			if(bestMatch == null) ++TN;
 			else ++FP;
 		}

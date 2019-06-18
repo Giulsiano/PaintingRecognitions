@@ -8,7 +8,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		System.out.println("Ricerca o indicizzazione? (R/I)");
 		//Scanner lineReader = new Scanner(System.in);
-		for (int i = 1; i < 2; ++i) {
+
+		for (int i = 0; i < 1; ++i) {
 			String ans = (i == 0)? "i":"r"; 
 			//lineReader.next();
 			//lineReader.close();
@@ -18,7 +19,7 @@ public class Main {
 				if(System.getProperty("os.name").startsWith("Windows"))
 					eis.search("testImgs/2.jpg");
 				else
-					eis.search("wikiartDEBUG/ni-zan/autumn-wind-in-gemstones-trees.jpg");
+					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("./testImgs/test/1.jpg");
 				eis.close();
 			}
 			else if (ans.toLowerCase().equals("i")) {

@@ -4,30 +4,25 @@ import static org.bytedeco.opencv.global.opencv_calib3d.RANSAC;
 import static org.bytedeco.opencv.global.opencv_calib3d.findHomography;
 import static org.bytedeco.opencv.global.opencv_core.CV_32FC2;
 import static org.bytedeco.opencv.global.opencv_core.CV_8UC1;
-import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.imshow;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
+import org.bytedeco.javacpp.indexer.FloatIndexer;
+import org.bytedeco.javacpp.indexer.UByteRawIndexer;
 import org.bytedeco.opencv.opencv_core.DMatchVector;
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.Point2f;
 
-import it.unipi.ing.mim.main.Parameters;
-
-import org.bytedeco.javacpp.indexer.FloatIndexer;
-import org.bytedeco.javacpp.indexer.UByteRawIndexer;
+import it.unipi.ing.mim.main.RansacParameters;
 
 public class Ransac {
 
 	private Mat homography;
 	private Mat inliers;
 	private double pxThreshold;
+	private RansacParameters parameters;
 	
-	public Ransac (double pxThreshold) {
-		this.pxThreshold = pxThreshold;
+	public Ransac (RansacParameters parameters) {
+		this.parameters = parameters;
 	}
 
 	public void computeHomography(DMatchVector goodMatches, KeyPointVector keypointsObject,
@@ -35,7 +30,7 @@ public class Ransac {
 
 		Mat obj = new Mat((int) goodMatches.size(), 1, CV_32FC2);
 		Mat scene = new Mat((int) goodMatches.size(), 1, CV_32FC2);
-		this.inliers = new Mat((int) Parameters.MIN_RANSAC_INLIERS, 1, CV_8UC1);
+		this.inliers = new Mat((int) parameters.getMinRansacInliers(), 1, CV_8UC1);
 
 		FloatIndexer ptObjIdx = obj.createIndexer();
 		FloatIndexer ptSceneIdx = scene.createIndexer();

@@ -52,11 +52,10 @@ public class SeqImageStorage {
 							KeyPointVector keypoints = detector.detectKeypoints(image);
 							Mat descriptor = extractor.extractDescriptor(image, keypoints);
 
+							// Store on file each descriptor's feature normalized. ImgDescriptor normalize
+							// the matrix into the constructor
 							System.out.println("Processing image #" + (++imgCounter) + ": " + filename);
-							int numFeatures = computeNumFeatures(descriptor, 
-																 Parameters.MIN_KEYPOINT_NUM, 
-																 Parameters.KEYPOINT_PERCENT);
-							float[][] features = getRandomFeatures(descriptor, numFeatures);
+							float[][] features = getRandomFeatures(descriptor);
 							if (features == null || features.length == 0) {
 								System.err.println("!!!! "+ filename + ": Problem computing features. Features' matrix is empty");
 								continue;
@@ -64,9 +63,6 @@ public class SeqImageStorage {
 							// Save image name and number of extracted features
 							keypointPerImage.add(features.length);
 							imageNames.add(filename.toString());
-							
-							// Store on file each descriptor's feature matrix which is normalized by
-							// constructor of ImgDescriptor
 							StreamManagement.append(new ImgDescriptor(features, filename), descriptorFile, ImgDescriptor.class);
 						}
 					}
@@ -81,15 +77,7 @@ public class SeqImageStorage {
 		}
 	}
 	
-	private int computeNumFeatures(Mat descriptor, int minKeypointNum, float percent) {
-		int nRows = descriptor.rows();
-		if (nRows < minKeypointNum) return nRows;
-		int nFeatures = Math.round(nRows * percent);
-		if (nFeatures < minKeypointNum) return minKeypointNum;
-		return nFeatures;
-	}
-
-	public float[][] getRandomFeatures (Mat features, int featuresToTake){
+	public float[][] getRandomFeatures (Mat features){
 		long descriptorRows = features.rows();
 		float[][] randomFeatures = null;
 		if (descriptorRows > 0) {

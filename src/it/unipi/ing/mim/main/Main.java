@@ -9,7 +9,7 @@ public class Main {
 		System.out.println("Ricerca o indicizzazione? (R/I)");
 		//Scanner lineReader = new Scanner(System.in);
 
-		for (int i = 0; i < 1; ++i) {
+		for (int i = 0; i < 2; ++i) {
 			String ans = (i == 0)? "i":"r"; 
 			//lineReader.next();
 			//lineReader.close();
@@ -19,7 +19,7 @@ public class Main {
 				if(System.getProperty("os.name").startsWith("Windows"))
 					eis.search("testImgs/2.jpg");
 				else
-					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("./testImgs/ni-zan/autumn-wind-in-gemstones-trees.jpg");
+					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("./testImgs/test/puppaAllaGrande.jpg");
 				eis.close();
 			}
 			else if (ans.toLowerCase().equals("i")) {

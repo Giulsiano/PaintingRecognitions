@@ -1,8 +1,5 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
-import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
 import java.io.FileNotFoundException;
@@ -31,12 +28,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import com.github.cliftonlabs.json_simple.JsonObject;
-
 import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.deep.tools.Output;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
-import it.unipi.ing.mim.features.BoundingBox;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.FeaturesMatching;
 import it.unipi.ing.mim.features.FeaturesMatchingFiltered;
@@ -47,7 +40,6 @@ import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.main.RansacParameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
-import it.unipi.ing.mim.utils.MetadataRetriever;
 
 public class ElasticImgSearching implements AutoCloseable {
 
@@ -61,7 +53,12 @@ public class ElasticImgSearching implements AutoCloseable {
 	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
 		//Initialize pivots, imgDescMap, REST
-		ransacParameters = new RansacParameters();
+		this(new RansacParameters(), topKSearch);
+	}
+	
+	public ElasticImgSearching (RansacParameters parameters, int topKSearch) throws ClassNotFoundException, IOException {
+		//Initialize pivots, imgDescMap, REST
+		ransacParameters = parameters;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
 	    this.topKqry = topKSearch; 

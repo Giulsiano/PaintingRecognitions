@@ -55,7 +55,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	private static String PROTOCOL = "http";
 	private RestHighLevelClient client;
 	private int topKqry;
-
+	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
 		//Initialize pivots, imgDescMap, REST
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
@@ -63,7 +63,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	    this.topKqry = topKSearch; 
 	}
 	
-	public void search (String qryImage) throws Exception {
+	public String search (String qryImage) throws Exception {
 		// Read the image to search and extract its feature
 		MatConverter matConverter = new MatConverter();
 
@@ -82,62 +82,27 @@ public class ElasticImgSearching implements AutoCloseable {
 		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry);
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
-		// Compute ORB features for query
-		detector = new KeyPointsDetector(KeyPointsDetector.ORB_FEATURES);
-		extractor = new FeaturesExtraction(detector.getKeypointDetector());
-		KeyPointVector qryKeypoints = detector.detectKeypoints(queryImg);
-		queryDesc = extractor.extractDescriptor(queryImg, qryKeypoints);
 		
-		// Compute ORB features for each neighbour and 
-		FeaturesMatching matcher = new FeaturesMatching();
-		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();
-		List<SimpleEntry<String, DMatchVector>> goodMatches = new LinkedList<>();
-		for (String neighbourName : neighbours) {
-			Mat img = imread(neighbourName);
-			keypoints = detector.detectKeypoints(img);
-			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
-			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
-			DMatchVector filteredMatches = filter.filterMatches(matches, Parameters.MAX_DISTANCE_THRESHOLD);
-			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
- 		}
+		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg);
+		if(bestGoodMatchName==null) {
+			System.err.println("No good matches found for " + qryImage);
+		}
+		return bestGoodMatchName;
 		
-		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
-		long maxInliers = 0;
-		Ransac ransac = new Ransac(Parameters.RANSAC_PX_THRESHOLD);
-		Mat bestHomography = null;
-		Mat bestImg=null;
-		KeyPointVector bestKeypoints=null;
-		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
-		for (SimpleEntry<String, DMatchVector> goodMatch : goodMatches) {
-			DMatchVector matches = goodMatch.getValue();
-			if (matches.size() > 0) {
-				Mat img = imread(goodMatch.getKey());
-				keypoints = detector.detectKeypoints(img);
-				ransac.computeHomography(goodMatch.getValue(), qryKeypoints, keypoints);
-				int inliers = ransac.countNumInliers();
-				if (inliers > maxInliers) {
-					maxInliers = inliers;
-					bestGoodMatch = goodMatch;
-					bestHomography = ransac.getHomography();
-					bestImg= img;
-					bestKeypoints= keypoints;
-				}
-			}
-		}
-		if (bestGoodMatch != null) {
-			JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
-			String qryImagePath = Parameters.BASE_URI + qryImage;
-			String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
-			Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-			
-			Mat imgMatches = new Mat();
-			drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
-			BoundingBox.imshow("RANSAC", imgMatches);
-			waitKey();
-			destroyAllWindows();
-		}
-		else System.err.println("No good matches found for " + qryImage);
+//		if (bestGoodMatch != null) {
+//			JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
+//			String qryImagePath = Parameters.BASE_URI + qryImage;
+//			String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
+//			Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
+//			
+//			Mat imgMatches = new Mat();
+//			drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
+//			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
+//			BoundingBox.imshow("RANSAC", imgMatches);
+//			waitKey();
+//			destroyAllWindows();
+//		}
+//		else System.err.println("No good matches found for " + qryImage);
 	}
 	
 	public void close () throws IOException {
@@ -215,4 +180,58 @@ public class ElasticImgSearching implements AutoCloseable {
 															 Comparator.reverseOrder()));
 		return clusterFrequencies;
 	}
+	
+	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) {
+		
+		FeaturesMatching matcher = new FeaturesMatching();
+		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();
+		List<SimpleEntry<String, DMatchVector>> goodMatches = new LinkedList<>();
+		
+		// Compute ORB features for query
+		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.ORB_FEATURES);
+		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
+		KeyPointVector qryKeypoints = detector.detectKeypoints(queryImg);
+		Mat queryDesc = extractor.extractDescriptor(queryImg, qryKeypoints);
+		
+		KeyPointVector keypoints= null;
+		
+		for (String neighbourName : neighbours) {
+			Mat img = imread(neighbourName);
+			keypoints = detector.detectKeypoints(img);
+			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
+			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
+			DMatchVector filteredMatches = filter.filterMatches(matches, Parameters.MAX_DISTANCE_THRESHOLD);
+			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
+ 		}
+		
+		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
+		long maxInliers = 0;
+		Ransac ransac = new Ransac(Parameters.RANSAC_PX_THRESHOLD);
+		Mat bestHomography = null;
+		Mat bestImg=null;
+		KeyPointVector bestKeypoints=null;
+		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
+		for (SimpleEntry<String, DMatchVector> goodMatch : goodMatches) {
+			DMatchVector matches = goodMatch.getValue();
+			if (matches.size() > 0) {
+				Mat img = imread(goodMatch.getKey());
+				keypoints = detector.detectKeypoints(img);
+				ransac.computeHomography(goodMatch.getValue(), qryKeypoints, keypoints);
+				int inliers = ransac.countNumInliers();
+				if (inliers > maxInliers) {
+					maxInliers = inliers;
+					bestGoodMatch = goodMatch;
+					bestHomography = ransac.getHomography();
+					bestImg= img;
+					bestKeypoints= keypoints;
+				}
+			}
+		}
+		if (bestGoodMatch != null) {
+		 return bestGoodMatch.getKey();
+		}
+		else {
+			return null;
+			}
+		}
 }

@@ -12,6 +12,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
+import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
+import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
+
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.bytedeco.opencv.opencv_core.DMatchVector;
@@ -28,8 +32,13 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import com.github.cliftonlabs.json_simple.JsonException;
+import com.github.cliftonlabs.json_simple.JsonObject;
+
 import it.unipi.ing.mim.deep.ImgDescriptor;
+import it.unipi.ing.mim.deep.tools.Output;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
+import it.unipi.ing.mim.features.BoundingBox;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.FeaturesMatching;
 import it.unipi.ing.mim.features.FeaturesMatchingFiltered;
@@ -40,6 +49,7 @@ import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.main.RansacParameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
+import it.unipi.ing.mim.utils.MetadataRetriever;
 
 public class ElasticImgSearching implements AutoCloseable {
 
@@ -64,7 +74,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	    this.topKqry = topKSearch; 
 	}
 	
-	public String search (String qryImage) throws Exception {
+	public String search (String qryImage, boolean test) throws Exception {
 		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +" is not a .jpg file format");
 		
 		// Read the image to search and extract its feature
@@ -86,12 +96,12 @@ public class ElasticImgSearching implements AutoCloseable {
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
 		
-		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg);
+		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
+		
 		if(bestGoodMatchName==null) {
 			System.err.println("No good matches found for " + qryImage);
 		}
 		return bestGoodMatchName;
-		
 //		if (bestGoodMatch != null) {
 //			JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
 //			String qryImagePath = Parameters.BASE_URI + qryImage;
@@ -105,7 +115,6 @@ public class ElasticImgSearching implements AutoCloseable {
 //			waitKey();
 //			destroyAllWindows();
 //		}
-//		else System.err.println("No good matches found for " + qryImage);
 	}
 	
 	public void close () throws IOException {
@@ -184,7 +193,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		return clusterFrequencies;
 	}
 	
-	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) {
+	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg, String qryImage, boolean test) throws FileNotFoundException, IOException, JsonException {
 		
 		FeaturesMatching matcher = new FeaturesMatching();
 		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();
@@ -231,6 +240,19 @@ public class ElasticImgSearching implements AutoCloseable {
 			}
 		}
 		if (bestGoodMatch != null) {
+			if (test == false) {
+				JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
+				String qryImagePath = Parameters.BASE_URI + qryImage;
+				String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
+				Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
+				
+				Mat imgMatches = new Mat();
+				drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
+				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
+				BoundingBox.imshow("RANSAC", imgMatches);
+				waitKey();
+				destroyAllWindows();
+			}
 			return bestGoodMatch.getKey();
 		}
 		else {

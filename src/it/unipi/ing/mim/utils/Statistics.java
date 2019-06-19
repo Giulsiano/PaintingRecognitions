@@ -172,7 +172,7 @@ public class Statistics {
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
+			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 			try{
 				bestMatch = elasticImgSearch.search(currTPImg);
 				if(bestMatch == null) ++FN;
@@ -198,7 +198,7 @@ public class Statistics {
 
 		for(String currTNImg : tnImages) {
 			try{
-				ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
+				ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 	            bestMatch=elasticImgSearch.search(currTNImg);
 				if(bestMatch == null) ++TN;
 				else ++FP;

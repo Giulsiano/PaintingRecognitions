@@ -1,5 +1,8 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
+import static org.bytedeco.opencv.global.opencv_core.CV_32F;
+import static org.bytedeco.opencv.global.opencv_core.kmeans;
+
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,8 +59,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		//Initialize pivots, imgDescDataset, REST
 		this.topKIdx = topKIdx;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
-	    client = new RestHighLevelClient(builder);
-	    
+		client = new RestHighLevelClient(builder);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -161,7 +164,8 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return client.indices().exists(requestdel, RequestOptions.DEFAULT);
 	}
 	
-	public void createIndex() throws IOException {
+	//TODO
+	public void createIndex() throws IOException, ConnectException {
 		try {
 			// If the index already exists delete it, then rebuild it
 			if(isESIndexExist(Parameters.INDEX_NAME)) {
@@ -180,8 +184,8 @@ public class ElasticImgIndexing implements AutoCloseable {
 					            .put("analysis.analyzer.first.type", "whitespace");
 			request.settings(s);
 			idx.create(request, RequestOptions.DEFAULT);
-		}catch(Exception e) {
-			System.out.println("Index \'" + Parameters.INDEX_NAME +"\' already exists");
+		}catch(ConnectException e) {
+			System.err.println("ElasticSearch server not running!");
 		}
 	}
 	
@@ -194,7 +198,9 @@ public class ElasticImgIndexing implements AutoCloseable {
 				IndexRequest request = composeRequest(imgId, temp);
 				try {
 					client.index(request, RequestOptions.DEFAULT);
-				} catch (IOException e) {
+				} catch(ConnectException e) {
+					System.err.println("ElasticSearch server not running!");
+				}catch (IOException e) {
 					e.printStackTrace();
 				}
 			}

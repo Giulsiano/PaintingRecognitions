@@ -47,7 +47,7 @@ public class Statistics {
 			BufferedReader parameterReader = new BufferedReader(new FileReader(ransacParameterFile));
 			String line = null; 
 			while ((line = parameterReader.readLine()) != null) {
-				if (!line.startsWith(COMMENT)) {
+				if (!line.startsWith(COMMENT) && !line.contentEquals("")) {
 					String[] lineParameters = line.split(DELIMITER);
 					RansacParameters rp = new RansacParameters();
 					rp.setDistanceThreshold(Integer.parseInt(lineParameters[0]));
@@ -150,9 +150,9 @@ public class Statistics {
 			if(bestMatch == null) ++FN;
 			else {
 				// In case there is a best match try to compare the last part of the image's path
-				String[] splitPath = bestMatch.split(File.pathSeparator);
+				String[] splitPath = bestMatch.split(File.separator);
 				bestMatch = splitPath[splitPath.length - 1];
-				splitPath = currTPImg.split(File.pathSeparator);
+				splitPath = currTPImg.split(File.separator);
 				String currTPImgName = splitPath[splitPath.length - 1];
 				//elasticImgSearch.close();
 				if(bestMatch.equals(currTPImgName)) {

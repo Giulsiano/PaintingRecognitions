@@ -175,7 +175,7 @@ public class Statistics {
 		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 			try{
-				bestMatch = elasticImgSearch.search(currTPImg);
+				bestMatch = elasticImgSearch.search(currTPImg, true);
 				if(bestMatch == null) ++FN;
 				else {
 					// In case there is a best match try to compare the last part of the image's path
@@ -199,8 +199,8 @@ public class Statistics {
 
 		for(String currTNImg : tnImages) {
 			try{
-	            ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
-                bestMatch=elasticImgSearch.search(currTNImg);
+			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
+	            bestMatch=elasticImgSearch.search(currTNImg, true);
 				if(bestMatch == null) ++TN;
 				else ++FP;
 			}catch(IllegalArgumentException e) {

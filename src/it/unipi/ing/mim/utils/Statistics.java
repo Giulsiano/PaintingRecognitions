@@ -47,7 +47,8 @@ public class Statistics {
 			BufferedReader parameterReader = new BufferedReader(new FileReader(ransacParameterFile));
 			String line = null; 
 			while ((line = parameterReader.readLine()) != null) {
-				if (!line.startsWith(COMMENT)) {
+				System.out.println("Reading Parameters RANSAC");
+				if (!line.startsWith(COMMENT)) {//&& !line.startsWith("")) {
 					String[] lineParameters = line.split(DELIMITER);
 					RansacParameters rp = new RansacParameters();
 					rp.setDistanceThreshold(Integer.parseInt(lineParameters[0]));
@@ -145,16 +146,18 @@ public class Statistics {
 		
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
+			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 			bestMatch = elasticImgSearch.search(currTPImg);
+			elasticImgSearch.close();
 			if(bestMatch == null) ++FN;
 			else {
 				// In case there is a best match try to compare the last part of the image's path
-				String[] splitPath = bestMatch.split(File.pathSeparator);
+				String[] splitPath = bestMatch.split(File.separator);
 				bestMatch = splitPath[splitPath.length - 1];
-				splitPath = currTPImg.split(File.pathSeparator);
+				splitPath = currTPImg.split(File.separator);
 				String currTPImgName = splitPath[splitPath.length - 1];
 				//elasticImgSearch.close();
+				System.err.println("TestImg: " + bestMatch + " TPString: " + currTPImgName );
 				if(bestMatch.equals(currTPImgName)) {
 					++TP;
 				}
@@ -163,7 +166,7 @@ public class Statistics {
 		}
 
 		for(String currTNImg : tnImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
+			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
             bestMatch=elasticImgSearch.search(currTNImg);
 			if(bestMatch == null) ++TN;
 			else ++FP;

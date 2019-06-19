@@ -65,6 +65,8 @@ public class ElasticImgSearching implements AutoCloseable {
 	}
 	
 	public String search (String qryImage) throws Exception {
+		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +" is not a .jpg file format");
+		
 		// Read the image to search and extract its feature
 		MatConverter matConverter = new MatConverter();
 

@@ -23,11 +23,11 @@ public class Parameters {
 	public static final File PIVOTS_FILE = new File("pivot.dat");
 	
 	//Top K pivots For Indexing
-	public static final int TOP_K_IDX = 10;//1000;
+     public static final int TOP_K_IDX = 10;
 	
 	//Top K pivots For Searching
-	public static final int TOP_K_QUERY = 10;//1000;
-	
+	public static final int TOP_K_QUERY = 10;
+
 	//Lucene Index
 	public static final String INDEX_NAME = "painting";
 	
@@ -52,13 +52,13 @@ public class Parameters {
 
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 34; // from 25 to 50
-	public static final Integer NUM_KMEANS_CLUSTER = 20;	// TODO Ricorda di cambiarlo
+	public static final Integer NUM_KMEANS_CLUSTER = 100;	// TODO Ricorda di cambiarlo
 	public static final int MIN_RANSAC_INLIERS = 12;
 	public static final int MIN_GOOD_MATCHES = 15;
 	public static final double RANSAC_PX_THRESHOLD = 1.0;
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
-	public static final int RANDOM_KEYPOINT_NUM = 500;
+	public static final int RANDOM_KEYPOINT_NUM = 200;
 	
 	// ORB feature extraction parameters
 	public static final int ORB_MAX_FEATURE = 1000;

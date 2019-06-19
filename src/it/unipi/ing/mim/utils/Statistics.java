@@ -11,8 +11,16 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import org.elasticsearch.common.settings.SecureString;
+
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
 
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.main.Parameters;
@@ -24,6 +32,7 @@ public class Statistics {
 //	private static final int IMG_NUM = 5;
 	public static final File outputFile = new File("statistic.txt");
 	public static final File ransacParameterFile = new File("ransac_parameters.csv");
+	public static final File testSetFile = new File("test_set.csv");
 	
 	// True/False Positives/Negatives
 	// False positive means a retrieved image with matches but it isn't the searched image
@@ -146,6 +155,19 @@ public class Statistics {
 	}
 
 	public void computeConfusionMatrixValues() throws Exception {
+
+		Map<String, List<String>> testsetname = new HashMap<>();
+		BufferedReader testSetReader = new BufferedReader(new FileReader(testSetFile));
+		String line = null; 
+		while ((line = testSetReader.readLine()) != null) {
+				String[] lineName = line.split(DELIMITER);
+				List<String> matchImg = new ArrayList<String>(lineName.length-1);
+				Arrays.stream(Arrays.copyOfRange(lineName, 1, lineName.length))
+					  .forEach((imgName) -> {matchImg.add(imgName);});
+				testsetname.put(lineName[0], matchImg);
+				
+		}
+		testSetReader.close();
 		
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
@@ -161,11 +183,14 @@ public class Statistics {
 					splitPath = currTPImg.split(File.separator);
 					String currTPImgName = splitPath[splitPath.length - 1];
 					//elasticImgSearch.close();
-					if(bestMatch.equals(currTPImgName)) {
+					
+					List<String> expectedImgs = testsetname.get(bestMatch); //search the name
+					if(expectedImgs == null) ++FP; //if null, not present
+					else if(expectedImgs.contains(currTPImgName)) //if not null search
 						++TP;
-					}
 					else ++FP;
-			}
+					
+				}
 			}catch(IllegalArgumentException e) {
 				System.err.println(e.getMessage());
 			}

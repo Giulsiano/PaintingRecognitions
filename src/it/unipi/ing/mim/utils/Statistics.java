@@ -42,6 +42,8 @@ public class Statistics {
 	
 	public static void main(String[] args) {
 		try{
+			System.out.println("Start statistics program");
+			System.out.println("Read RANSAC parameters");
 			// Read RANSAC algorithm parameters from file and put them into a list 
 			List<RansacParameters> parameters = new LinkedList<>();
 			BufferedReader parameterReader = new BufferedReader(new FileReader(ransacParameterFile));
@@ -59,6 +61,7 @@ public class Statistics {
 			}
 			parameterReader.close();
 			
+			System.out.println("Calculating statistics");
 			// Collect statistics by using different parameters for RANSAC algorithm
 			for (RansacParameters ransacParameters : parameters) {
 				Statistics statistics= new Statistics(ransacParameters);
@@ -89,6 +92,7 @@ public class Statistics {
 				printFile.println();
 				printFile.close();
 			}
+			System.out.println("End statistics program");
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -143,30 +147,39 @@ public class Statistics {
 
 	public void computeConfusionMatrixValues() throws Exception {
 		
+		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
-			bestMatch = elasticImgSearch.search(currTPImg);
-			if(bestMatch == null) ++FN;
-			else {
-				// In case there is a best match try to compare the last part of the image's path
-				String[] splitPath = bestMatch.split(File.separator);
-				bestMatch = splitPath[splitPath.length - 1];
-				splitPath = currTPImg.split(File.separator);
-				String currTPImgName = splitPath[splitPath.length - 1];
-				//elasticImgSearch.close();
-				if(bestMatch.equals(currTPImgName)) {
-					++TP;
-				}
-				else ++FP;
+			try{
+				bestMatch = elasticImgSearch.search(currTPImg);
+				if(bestMatch == null) ++FN;
+				else {
+					// In case there is a best match try to compare the last part of the image's path
+					String[] splitPath = bestMatch.split(File.separator);
+					bestMatch = splitPath[splitPath.length - 1];
+					splitPath = currTPImg.split(File.separator);
+					String currTPImgName = splitPath[splitPath.length - 1];
+					//elasticImgSearch.close();
+					if(bestMatch.equals(currTPImgName)) {
+						++TP;
+					}
+					else ++FP;
+			}
+			}catch(IllegalArgumentException e) {
+				System.err.println(e.getMessage());
 			}
 		}
 
 		for(String currTNImg : tnImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
-            bestMatch=elasticImgSearch.search(currTNImg);
-			if(bestMatch == null) ++TN;
-			else ++FP;
+			try{
+				ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.KNN);
+	            bestMatch=elasticImgSearch.search(currTNImg);
+				if(bestMatch == null) ++TN;
+				else ++FP;
+			}catch(IllegalArgumentException e) {
+				System.err.println(e.getMessage());
+			}
 		}
 	}
 }

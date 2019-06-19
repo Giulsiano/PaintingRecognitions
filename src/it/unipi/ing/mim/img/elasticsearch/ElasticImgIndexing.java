@@ -1,30 +1,22 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
-import static org.bytedeco.opencv.global.opencv_core.CV_32F;
-import static org.bytedeco.opencv.global.opencv_core.kmeans;
-
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ConnectException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.http.HttpHost;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;

@@ -208,7 +208,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		KeyPointVector keypoints= null;
 		
 		for (String neighbourName : neighbours) {
-			Mat img = imread(neighbourName);
+			Mat img = ResizeImage.resizeImage(imread(neighbourName));
 			keypoints = detector.detectKeypoints(img);
 			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
 			DMatchVector matches = matcher.match(queryDesc, imgFeatures);

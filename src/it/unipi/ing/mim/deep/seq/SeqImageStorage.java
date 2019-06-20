@@ -17,6 +17,7 @@ import java.util.Set;
 
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Size;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
@@ -24,6 +25,7 @@ import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.KeyPointsDetector;
 import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.utils.MatConverter;
+import it.unipi.ing.mim.utils.ResizeImage;
 
 public class SeqImageStorage {
 	
@@ -39,11 +41,10 @@ public class SeqImageStorage {
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		int imgCounter = 0;
+		float scaleFactor = 0.0f;
 		// For each directory into the main image directory
 		try {
 			for (Path dir : Files.newDirectoryStream(imgFolder)) {
-
-
 				if(!dir.toString().endsWith(".DS_Store")) {
 					// For each file into the directory
 					for (Path file : Files.newDirectoryStream(dir)) {
@@ -51,8 +52,9 @@ public class SeqImageStorage {
 						if (filename.toLowerCase().endsWith(".jpg")) {
 							// Compute descriptors of the image
 							Mat image = imread(filename);
-							KeyPointVector keypoints = detector.detectKeypoints(image);
-							Mat descriptor = extractor.extractDescriptor(image, keypoints);
+							Mat resizedImage = ResizeImage.resizeImage(image);
+							KeyPointVector keypoints = detector.detectKeypoints(resizedImage);
+							Mat descriptor = extractor.extractDescriptor(resizedImage, keypoints);
 
 							// Store on file each descriptor's feature normalized. ImgDescriptor normalize
 							// the matrix into the constructor

@@ -50,6 +50,7 @@ import it.unipi.ing.mim.main.RansacParameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
 import it.unipi.ing.mim.utils.MetadataRetriever;
+import it.unipi.ing.mim.utils.ResizeImage;
 
 public class ElasticImgSearching implements AutoCloseable {
 
@@ -79,8 +80,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		
 		// Read the image to search and extract its feature
 		MatConverter matConverter = new MatConverter();
-
-		Mat queryImg = imread(qryImage);
+		
+		Mat queryImg = ResizeImage.resizeImage(imread(qryImage));
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
@@ -94,7 +95,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		// Make the search by computing the bag of feature of the query
 		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry);
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
-		
 		
 		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
 		
@@ -208,7 +208,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		KeyPointVector keypoints= null;
 		
 		for (String neighbourName : neighbours) {
-			Mat img = imread(neighbourName);
+			Mat img = ResizeImage.resizeImage(imread(neighbourName));
 			keypoints = detector.detectKeypoints(img);
 			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
 			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
@@ -226,7 +226,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		for (SimpleEntry<String, DMatchVector> goodMatch : goodMatches) {
 			DMatchVector matches = goodMatch.getValue();
 			if (matches.size() > 0) {
-				Mat img = imread(goodMatch.getKey());
+				Mat img = ResizeImage.resizeImage(imread(goodMatch.getKey()));
 				keypoints = detector.detectKeypoints(img);
 				ransac.computeHomography(goodMatch.getValue(), qryKeypoints, keypoints);
 				int inliers = ransac.countNumInliers();

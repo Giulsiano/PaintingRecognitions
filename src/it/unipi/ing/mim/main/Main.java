@@ -16,10 +16,7 @@ public class Main {
 			
 			if (ans.toLowerCase().equals("r")) {
 				ElasticImgSearching eis = new ElasticImgSearching(Parameters.TOP_K_QUERY);
-				if(System.getProperty("os.name").startsWith("Windows"))
-					eis.search("testImgs/2.jpg", false);
-				else
-					new ElasticImgSearching(Parameters.TOP_K_QUERY).search("./naaa.jpg", false);
+				eis.search(args[0], false);
 				eis.close();
 			}
 			else if (ans.toLowerCase().equals("i")) {

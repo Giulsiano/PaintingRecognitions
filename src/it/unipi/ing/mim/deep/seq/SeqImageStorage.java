@@ -27,8 +27,6 @@ import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.utils.MatConverter;
 import it.unipi.ing.mim.utils.ResizeImage;
 
-import static org.bytedeco.opencv.global.opencv_imgproc.resize;
-
 public class SeqImageStorage {
 	
 	private final File descriptorFile = Parameters.DESCRIPTOR_FILE;
@@ -55,7 +53,6 @@ public class SeqImageStorage {
 							// Compute descriptors of the image
 							Mat image = imread(filename);
 							Mat resizedImage = ResizeImage.resizeImage(image);
-							
 							KeyPointVector keypoints = detector.detectKeypoints(resizedImage);
 							Mat descriptor = extractor.extractDescriptor(resizedImage, keypoints);
 

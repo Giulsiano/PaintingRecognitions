@@ -80,7 +80,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		
 		// Read the image to search and extract its feature
 		MatConverter matConverter = new MatConverter();
-
+		
 		Mat queryImg = ResizeImage.resizeImage(imread(qryImage));
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());

@@ -14,10 +14,12 @@ public class ResizeImage {
 		Mat resizedImage = new Mat();
 		int h = image.rows();
 		int w = image.cols();
-		float scaleFactor = (float) Math.sqrt(Parameters.MPX_PER_IMAGE/(w * h));
-		w = Math.round(w * scaleFactor);
-		h = Math.round(h * scaleFactor);
-		resize(image, resizedImage, new Size(w, h));
+		if (h > 0 && w > 0) {
+			float scaleFactor = (float) Math.sqrt(Parameters.MPX_PER_IMAGE/(float)(w * h));
+			w = Math.round(w * scaleFactor);
+			h = Math.round(h * scaleFactor);
+			resize(image, resizedImage, new Size(w, h));
+		}
 		return resizedImage;
 	}
 }

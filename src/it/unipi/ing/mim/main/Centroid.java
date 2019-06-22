@@ -5,8 +5,6 @@ import java.io.Serializable;
 import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
 
-import it.unipi.ing.mim.deep.ImgDescriptor;
-
 public class Centroid implements Serializable{
 
 	private static final long serialVersionUID = 1L;

@@ -1,5 +1,6 @@
 package it.unipi.ing.mim.utils;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -9,10 +10,6 @@ import java.util.Map;
 
 import org.bytedeco.javacpp.indexer.IntRawIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
-
-import it.unipi.ing.mim.main.Parameters;
-
-import java.util.AbstractMap.SimpleEntry;
 
 public class BOF {
 	private static String DELIMITER = " ";

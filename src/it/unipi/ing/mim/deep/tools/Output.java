@@ -1,17 +1,15 @@
 package it.unipi.ing.mim.deep.tools;
 
-import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.img.elasticsearch.Fields;
-import it.unipi.ing.mim.main.Parameters;
-import it.unipi.ing.mim.utils.MetadataRetriever;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import it.unipi.ing.mim.deep.ImgDescriptor;
+import it.unipi.ing.mim.img.elasticsearch.Fields;
+import it.unipi.ing.mim.main.Parameters;
 
 public class Output {
 
@@ -21,7 +19,7 @@ public class Output {
 		Map<String, Object> m = new HashMap<>();
 		m.put(Fields.ARTIST_NAME, "John Smith");
 		m.put(Fields.TITLE, "John Smith");
-		m.put(Fields.YEAR, "Dumàn");
+		m.put(Fields.YEAR, "Dumï¿½n");
 		String qryUri = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/photo5764702944778891453.jpg";
 		String imgUri = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/ni-zan/autumn-wind-in-gemstones-trees.jpg";
 		File outfile = new File("john_smith.html");

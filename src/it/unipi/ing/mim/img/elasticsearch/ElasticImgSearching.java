@@ -1,5 +1,8 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
+import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
+import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
+import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
 import java.io.FileNotFoundException;
@@ -11,10 +14,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;

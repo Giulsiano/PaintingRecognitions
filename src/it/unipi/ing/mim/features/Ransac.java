@@ -18,7 +18,6 @@ public class Ransac {
 
 	private Mat homography;
 	private Mat inliers;
-	private double pxThreshold;
 	private RansacParameters parameters;
 	
 	public Ransac (RansacParameters parameters) {
@@ -41,7 +40,7 @@ public class Ransac {
 			Point2f p2 = keypointsScene.get(goodMatches.get(i).trainIdx()).pt(); 
 			ptSceneIdx.put(i, p2.x(), p2.y());
 		}
-		homography = findHomography(obj, scene, inliers, RANSAC, pxThreshold);
+		homography = findHomography(scene, obj, inliers, RANSAC, parameters.getRansacPixelThreshold());
 	}
 
 

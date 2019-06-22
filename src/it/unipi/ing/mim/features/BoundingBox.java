@@ -35,7 +35,7 @@ public class BoundingBox {
 		Scalar scalar = new Scalar(255, 0, 0, 0);
 
 		FloatIndexer sceneCornersIdx = sceneCorners.createIndexer();
-
+		
 		int x0 = (int) sceneCornersIdx.get(0, 0, 0);
 		int y0 = (int) sceneCornersIdx.get(0, 0, 1);
 		x0 += shift;

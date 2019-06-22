@@ -102,19 +102,6 @@ public class ElasticImgSearching implements AutoCloseable {
 			System.err.println("No good matches found for " + qryImage);
 		}
 		return bestGoodMatchName;
-//		if (bestGoodMatch != null) {
-//			JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
-//			String qryImagePath = Parameters.BASE_URI + qryImage;
-//			String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
-//			Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-//			
-//			Mat imgMatches = new Mat();
-//			drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-//			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
-//			BoundingBox.imshow("RANSAC", imgMatches);
-//			waitKey();
-//			destroyAllWindows();
-//		}
 	}
 	
 	public void close () throws IOException {
@@ -247,8 +234,8 @@ public class ElasticImgSearching implements AutoCloseable {
 				Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
 				
 				Mat imgMatches = new Mat();
-				drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
+				drawMatches(  queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
+				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography,0);// queryImg.cols());
 				BoundingBox.imshow("RANSAC", imgMatches);
 				waitKey();
 				destroyAllWindows();

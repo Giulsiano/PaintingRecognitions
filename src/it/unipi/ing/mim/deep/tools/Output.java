@@ -1,17 +1,15 @@
 package it.unipi.ing.mim.deep.tools;
 
-import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.img.elasticsearch.Fields;
-import it.unipi.ing.mim.main.Parameters;
-import it.unipi.ing.mim.utils.MetadataRetriever;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import it.unipi.ing.mim.deep.ImgDescriptor;
+import it.unipi.ing.mim.img.elasticsearch.Fields;
+import it.unipi.ing.mim.main.Parameters;
 
 public class Output {
 

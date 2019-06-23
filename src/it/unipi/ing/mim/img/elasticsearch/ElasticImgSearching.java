@@ -1,5 +1,8 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
+import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
+import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
+import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
 import java.io.FileNotFoundException;
@@ -11,10 +14,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -102,19 +101,6 @@ public class ElasticImgSearching implements AutoCloseable {
 			System.err.println("No good matches found for " + qryImage);
 		}
 		return bestGoodMatchName;
-//		if (bestGoodMatch != null) {
-//			JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
-//			String qryImagePath = Parameters.BASE_URI + qryImage;
-//			String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
-//			Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-//			
-//			Mat imgMatches = new Mat();
-//			drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-//			BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
-//			BoundingBox.imshow("RANSAC", imgMatches);
-//			waitKey();
-//			destroyAllWindows();
-//		}
 	}
 	
 	public void close () throws IOException {
@@ -226,7 +212,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		for (SimpleEntry<String, DMatchVector> goodMatch : goodMatches) {
 			DMatchVector matches = goodMatch.getValue();
 			if (matches.size() > 0) {
-				Mat img = imread(goodMatch.getKey());
+				Mat img = ResizeImage.resizeImage(imread(goodMatch.getKey()));
 				keypoints = detector.detectKeypoints(img);
 				ransac.computeHomography(goodMatch.getValue(), qryKeypoints, keypoints);
 				int inliers = ransac.countNumInliers();
@@ -247,8 +233,8 @@ public class ElasticImgSearching implements AutoCloseable {
 				Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
 				
 				Mat imgMatches = new Mat();
-				drawMatches(queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography, queryImg.cols());
+				drawMatches(  queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
+				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography,0);// queryImg.cols());
 				BoundingBox.imshow("RANSAC", imgMatches);
 				waitKey();
 				destroyAllWindows();

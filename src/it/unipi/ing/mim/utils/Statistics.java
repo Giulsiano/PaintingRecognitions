@@ -7,20 +7,15 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.elasticsearch.common.settings.SecureString;
-
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
 
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.main.Parameters;
@@ -58,6 +53,7 @@ public class Statistics {
 			BufferedReader parameterReader = new BufferedReader(new FileReader(ransacParameterFile));
 			String line = null; 
 			while ((line = parameterReader.readLine()) != null) {
+
 				if (!line.startsWith(COMMENT) && !line.contentEquals("")) {
 					String[] lineParameters = line.split(DELIMITER);
 					RansacParameters rp = new RansacParameters();
@@ -171,10 +167,11 @@ public class Statistics {
 		
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
-		for(String currTPImg: tpImages) { 
+		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 			try{
 				bestMatch = elasticImgSearch.search(currTPImg, true);
+				elasticImgSearch.close();
 				if(bestMatch == null) ++FN;
 				else {
 					// In case there is a best match try to compare the last part of the image's path
@@ -198,8 +195,9 @@ public class Statistics {
 
 		for(String currTNImg : tnImages) {
 			try{
-				ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
+			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 	            bestMatch=elasticImgSearch.search(currTNImg, true);
+	            elasticImgSearch.close();
 				if(bestMatch == null) ++TN;
 				else ++FP;
 			}catch(IllegalArgumentException e) {

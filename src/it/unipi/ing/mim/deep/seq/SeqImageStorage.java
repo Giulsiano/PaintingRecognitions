@@ -17,7 +17,6 @@ import java.util.Set;
 
 import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.Size;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
@@ -41,7 +40,7 @@ public class SeqImageStorage {
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		int imgCounter = 0;
-		float scaleFactor = 0.0f;
+		//float scaleFactor = 0.0f;
 		// For each directory into the main image directory
 		try {
 			for (Path dir : Files.newDirectoryStream(imgFolder)) {

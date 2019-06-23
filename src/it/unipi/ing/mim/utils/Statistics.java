@@ -46,6 +46,9 @@ public class Statistics {
 	
 	public static void main(String[] args) {
 		try{
+			System.out.println("Generating test_set.csv file");
+			createCsvFile();
+			
 			System.out.println("Start statistics program");
 			System.out.println("Read RANSAC parameters");
 			// Read RANSAC algorithm parameters from file and put them into a list 
@@ -203,6 +206,28 @@ public class Statistics {
 			}catch(IllegalArgumentException e) {
 				System.err.println(e.getMessage());
 			}
+		}
+	}
+	
+	public static void createCsvFile() {
+		String filepath = "";
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(testSetFile));
+			for (Path dir : Files.newDirectoryStream(tpImg)) {
+				if(!dir.toString().endsWith(".DS_Store")) {
+					// For each file into the directory
+					filepath = dir.toString();
+					String[] splitPath = filepath.split(File.separator);
+					String filename = splitPath[splitPath.length - 1];
+					bw.write(filename +","+filename+"\n");
+				}
+			}
+			bw.close();
+		}catch (IOException e) {
+
+			System.err.println("IOException file " + filepath);
+			e.printStackTrace();
+
 		}
 	}
 }

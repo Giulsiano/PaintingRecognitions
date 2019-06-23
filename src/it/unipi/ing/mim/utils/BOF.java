@@ -1,54 +1,56 @@
 package it.unipi.ing.mim.utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.bytedeco.javacpp.indexer.IntRawIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
 
+import it.unipi.ing.mim.deep.tools.StreamManagement;
+import it.unipi.ing.mim.main.Parameters;
+
 public class BOF {
 	private static String DELIMITER = " ";
+	public static final File POSTING_LIST_FILE =  Parameters.POSTING_LISTS_FILE;
 	
 	@SuppressWarnings("unchecked")
-	public static Map<String, SimpleEntry<Integer, Integer>[]> getPostingLists (Mat labels, int numClusters, List<Integer> keypointPerImage, List<String> imgIds){
+	public static void getPostingLists (Mat labels, int numClusters, List<Integer> keypointPerImage, List<String> imgIds) throws IOException{
 		IntRawIndexer labelIdx = labels.createIndexer();
-		long labelRows = labelIdx.rows();
-		int nimgs = keypointPerImage.size();
-		long labelPerImage = labelRows/nimgs; 
 		int start = 0;
 		int end = 0;
+		int i = 0;
 		
 		// For each image compute the posting list associated to it, that is the list
 		// (image name, array of couple (clusterId, frequency of cluster)
-		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = new HashMap<>(nimgs, 1.0f);
-		Iterator<String> imgIdsIt = imgIds.iterator();
-		for (int i = 0; i < nimgs; ++i) {
+		for (String imgId : imgIds) {
 			SimpleEntry<Integer, Integer>[] clusterFrequencies = (SimpleEntry<Integer, Integer>[]) new SimpleEntry[numClusters];
 			int[] frequencies = new int[numClusters];
 			Arrays.fill(frequencies, 0);
 			
 			// Compute histogram/frequencies per cluster
-			end += Math.min(keypointPerImage.get(i), labelPerImage);
+			end += keypointPerImage.get(i++);
 			for (int j = start; j < end; ++j) {
 				++frequencies[labelIdx.get(j)];
 			}
 			start = end;
 			
-			// Ordering (clusterID, frequency of cluster) descendently, so there are first more 
-			// frequent clusters 
+			// Ordering (clusterID, frequency of cluster) descendently, so more frequent clusters
+			// are the first in the posting list
 			for (int j = 0; j < frequencies.length; ++j) 
 				clusterFrequencies[j] = new SimpleEntry<Integer, Integer>(j, frequencies[j]);
 			Arrays.sort(clusterFrequencies, Comparator.comparing(SimpleEntry::getValue, 
-																 Comparator.reverseOrder()));
-			// Put ordered posting lists into the map
-			if (imgIdsIt.hasNext()) postingLists.put(imgIdsIt.next(), clusterFrequencies);
+					Comparator.reverseOrder()));
+
+			// Store posting list to disk
+			SimpleEntry<String, SimpleEntry<Integer, Integer>[]> postingList =
+					new SimpleEntry<String, AbstractMap.SimpleEntry<Integer,Integer>[]>(imgId, clusterFrequencies);
+			StreamManagement.append(postingList, POSTING_LIST_FILE, SimpleEntry.class);
 		}
-		return postingLists;
 	}
 	
 	public static String features2Text(SimpleEntry<Integer, Integer>[] imgPostingList, int topK) {
@@ -67,6 +69,5 @@ public class BOF {
 		}
 		return sb.toString();
 	}
-	
-	
 }
+

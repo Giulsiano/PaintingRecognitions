@@ -90,18 +90,19 @@ public class ElasticImgIndexing implements AutoCloseable {
 			System.err.println("No centroids have been found. Exiting.");
 			System.exit(1);
 		}
-		// Create posting lists by counting frequencies of cluster per image
-		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 
-				BOF.getPostingLists(labels, centroidList.size(), indexing.getKeypointPerImage(), 
-									indexing.getImageNames());
-		
-		// Save posting lists to file
-		StreamManagement.store(postingLists, Parameters.POSTING_LISTS_FILE, Map.class);
-
+		// Create posting lists by counting frequencies of cluster per image and store it to disk
+		File postingListFile = Parameters.POSTING_LISTS_FILE;
+		if (!postingListFile.exists()) {
+			System.out.println("Computing posting lists to be indexed");
+			BOF.getPostingLists(labels, centroidList.size(), indexing.getKeypointPerImage(), 
+					indexing.getImageNames());
+		}
 		// Put images to the index
+		System.out.println("Start indexing");
 		this.createIndex();
 		this.index();
 		this.close();
+		System.out.println("End indexing");
 	}
 	
 	private List<Centroid> computeClusterCentres (File descFile) throws Exception{
@@ -146,6 +147,39 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return bigmat;
 	}
 	
+	private void index () throws ClassNotFoundException {
+		try {
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(Parameters.POSTING_LISTS_FILE));
+			while (true){
+				try {
+					SimpleEntry<String, SimpleEntry<Integer, Integer>[]> postingList = 
+							(SimpleEntry<String, SimpleEntry<Integer, Integer>[]>) ois.readObject();
+					String imgId = postingList.getKey();
+					SimpleEntry<Integer, Integer>[] clusterFrequencies = postingList.getValue();
+					System.out.println("Elaboration of indexing request for " + imgId);
+					String bof = BOF.features2Text(clusterFrequencies, topKIdx);
+					IndexRequest request = composeRequest(imgId, bof);
+					client.index(request, RequestOptions.DEFAULT);
+				}
+				catch (EOFException e) { 
+					break;
+				}
+				catch (ConnectException e) {
+					System.err.println("ElasticSearch server not running!");
+					System.exit(1);
+				}
+				catch (IOException e) {
+					
+					e.printStackTrace();
+				}
+			}
+			ois.close();
+		}
+		catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void close() throws IOException {
 		//close REST client
 		client.close();
@@ -176,28 +210,31 @@ public class ElasticImgIndexing implements AutoCloseable {
 					            .put("analysis.analyzer.first.type", "whitespace");
 			request.settings(s);
 			idx.create(request, RequestOptions.DEFAULT);
-		}catch(ConnectException e) {
+		}
+		catch (ConnectException e) {
 			System.err.println("ElasticSearch server not running!");
+			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void index() throws FileNotFoundException, ClassNotFoundException, IOException {
-		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 
-				(Map<String, SimpleEntry<Integer, Integer>[]>) StreamManagement.load(Parameters.POSTING_LISTS_FILE, Map.class);
-		postingLists.forEach((imgId, postingList) -> {
-				String temp = BOF.features2Text(postingList, topKIdx);
-				IndexRequest request = composeRequest(imgId, temp);
-				try {
-					client.index(request, RequestOptions.DEFAULT);
-				} catch(ConnectException e) {
-					System.err.println("ElasticSearch server not running!");
-				}catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		);
-	}
+//	@SuppressWarnings("unchecked")
+//	public void index() throws FileNotFoundException, ClassNotFoundException, IOException {
+//		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 
+//				(Map<String, SimpleEntry<Integer, Integer>[]>) StreamManagement.load(Parameters.POSTING_LISTS_FILE, Map.class);
+//		postingLists.forEach((imgId, postingList) -> {
+//				String temp = BOF.features2Text(postingList, topKIdx);
+//				IndexRequest request = composeRequest(imgId, temp);
+//				try {
+//					client.index(request, RequestOptions.DEFAULT);
+//				} catch(ConnectException e) {
+//					System.err.println("ElasticSearch server not running!");
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		);
+//	}
 	
 	private IndexRequest composeRequest(String id, String imgTxt) {			
 		//Initialize and fill IndexRequest Object with Fields.ID and Fields.IMG txt

@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.bytedeco.opencv.opencv_core.DMatchVector;
@@ -22,7 +23,9 @@ import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RequestOptions.Builder;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -58,6 +61,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	private static String PROTOCOL = "http";
 	private RestHighLevelClient client;
 	private int topKqry;
+	private List<Centroid> centroidList = null;
 	
 	private RansacParameters ransacParameters;
 	
@@ -92,7 +96,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
 
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry);
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry); //50);//
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
 		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
@@ -115,7 +119,11 @@ public class ElasticImgSearching implements AutoCloseable {
 		SearchRequest searchReq= composeSearch(queryString, k);
 		
 		//perform elasticsearch search
-		SearchResponse searchResponse = client.search(searchReq, RequestOptions.DEFAULT);
+		Builder options = RequestOptions.DEFAULT.toBuilder();
+		options.setHttpAsyncResponseConsumerFactory(
+				new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(1000000000)
+				);
+		SearchResponse searchResponse = client.search(searchReq, options.build());
 		client.close();
 		SearchHit[] hits = searchResponse.getHits().getHits();
 		res = new ArrayList<>(hits.length);	
@@ -144,7 +152,9 @@ public class ElasticImgSearching implements AutoCloseable {
 	@SuppressWarnings("unchecked")
 	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query) throws FileNotFoundException, ClassNotFoundException, IOException {
 		// Read centroids, compute distances of query to each of them
-		List<Centroid> centroidList = (List<Centroid>) StreamManagement.load(Parameters.PIVOTS_FILE, List.class);
+		if (this.centroidList == null || this.centroidList.isEmpty()) {
+			this.centroidList =  (List<Centroid>) StreamManagement.load(Parameters.PIVOTS_FILE, List.class);
+		}
 		Float[][] distancesFromCentroids = query.distancesTo(centroidList);
 		int[] qryLabel = new int[distancesFromCentroids.length];
 		

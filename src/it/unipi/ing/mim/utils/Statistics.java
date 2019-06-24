@@ -3,6 +3,7 @@ package it.unipi.ing.mim.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,6 +18,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.elasticsearch.ElasticsearchException;
 
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.main.Parameters;
@@ -46,8 +49,8 @@ public class Statistics {
 	
 	public static void main(String[] args) {
 		try{
-			System.out.println("Generating test_set.csv file");
-			createCsvFile();
+			//System.out.println("Generating test_set.csv file");
+			//createCsvFile();
 			
 			System.out.println("Start statistics program");
 			System.out.println("Read RANSAC parameters");
@@ -100,9 +103,17 @@ public class Statistics {
 				printFile.println();
 				printFile.close();
 			}
-		} catch(Exception e) {
+		} catch(ElasticsearchException e) {
+			System.err.println("Elasticsearch Exception");
+			System.err.println(e.getMessage());
+			System.err.println(e.getDetailedMessage());
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		System.out.println("End statistics program");
 	}
 	
@@ -129,18 +140,21 @@ public class Statistics {
 //	}
 
 	public void initializeTrueNegativeImg() throws IOException {
-		initializeImgList(tnImg);
+		tnImages = initializeImgList(tnImg);
 	}
 	
-	private void initializeImgList (Path imgDirectory) throws IOException {
+	private List<String> initializeImgList (Path imgDirectory) throws IOException {
+		List<String> imgList = new LinkedList<String>();
 		DirectoryStream<Path> imgDirectories = Files.newDirectoryStream(imgDirectory);
 		for (Path img : imgDirectories) {
-			tnImages.add(img.toString());
+			imgList.add(img.toString());
 		}
 		imgDirectories.close();
+		return imgList;
 	}
+	
 	public void initializeTruePostiveImg() throws IOException {
-		initializeImgList(tpImg);
+		tpImages = initializeImgList(tpImg);
 	}
 
 	public float computeAccuracy () {
@@ -164,7 +178,9 @@ public class Statistics {
 				String[] lineName = line.split(DELIMITER);
 				List<String> matchImg = new ArrayList<String>(lineName.length-1);
 				Arrays.stream(Arrays.copyOfRange(lineName, 1, lineName.length))
-					  .forEach((imgName) -> {matchImg.add(imgName);});
+					  .forEach((imgName) -> {
+						  matchImg.add(imgName);
+					  });
 				testsetname.put(lineName[0], matchImg);
 		}
 		testSetReader.close();
@@ -174,6 +190,7 @@ public class Statistics {
 		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 			try{
+				System.out.println("Searching for " + currTPImg);
 				bestMatch = elasticImgSearch.search(currTPImg, true);
 				elasticImgSearch.close();
 				if(bestMatch == null) ++FN;

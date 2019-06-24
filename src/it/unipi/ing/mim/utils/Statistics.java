@@ -7,20 +7,16 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.FileSystem;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import org.elasticsearch.common.settings.SecureString;
-
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils.Collections;
 
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.main.Parameters;
@@ -29,7 +25,6 @@ import it.unipi.ing.mim.main.RansacParameters;
 public class Statistics {
 	private static final String DELIMITER = ",";
 	private static final String COMMENT = "#";
-//	private static final int IMG_NUM = 5;
 	public static final File outputFile = new File("statistic.txt");
 	public static final File ransacParameterFile = new File("ransac_parameters.csv");
 	public static final File testSetFile = new File("test_set.csv");
@@ -101,11 +96,10 @@ public class Statistics {
 				printFile.println();
 				printFile.close();
 			}
-			System.out.println("End statistics program");
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		
+		System.out.println("End statistics program");
 	}
 	
 	public Statistics(RansacParameters ransacParameter) {
@@ -131,15 +125,18 @@ public class Statistics {
 //	}
 
 	public void initializeTrueNegativeImg() throws IOException {
-		for (Path tnImg : Files.newDirectoryStream(tnImg)) {
-			tnImages.add(tnImg.toString());
-		}
+		initializeImgList(tnImg);
 	}
-
-	public void initializeTruePostiveImg() throws IOException {
-		for (Path tpImg : Files.newDirectoryStream(tpImg)) {
-			tpImages.add(tpImg.toString());
+	
+	private void initializeImgList (Path imgDirectory) throws IOException {
+		DirectoryStream<Path> imgDirectories = Files.newDirectoryStream(imgDirectory);
+		for (Path img : imgDirectories) {
+			tnImages.add(img.toString());
 		}
+		imgDirectories.close();
+	}
+	public void initializeTruePostiveImg() throws IOException {
+		initializeImgList(tpImg);
 	}
 
 	public float computeAccuracy () {
@@ -165,7 +162,6 @@ public class Statistics {
 				Arrays.stream(Arrays.copyOfRange(lineName, 1, lineName.length))
 					  .forEach((imgName) -> {matchImg.add(imgName);});
 				testsetname.put(lineName[0], matchImg);
-				
 		}
 		testSetReader.close();
 		

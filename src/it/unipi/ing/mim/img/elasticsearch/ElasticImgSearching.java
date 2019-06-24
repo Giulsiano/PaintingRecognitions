@@ -96,7 +96,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
 
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry); //50);//
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.NUM_BOF_CLUSTERS); //50);//
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
 		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);

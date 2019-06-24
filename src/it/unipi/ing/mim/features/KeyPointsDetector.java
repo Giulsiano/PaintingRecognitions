@@ -20,6 +20,9 @@ public class KeyPointsDetector {
 		return detector;
 	}
 	
+	/**
+	 * initialize the detector with the type of keypoint detector to use
+	 */
 	public KeyPointsDetector(int featureType) {
 		switch (featureType) {
 		case SIFT_FEATURES:
@@ -36,10 +39,11 @@ public class KeyPointsDetector {
 		}
 	}
 
-	//
+	/**
+	 * detect image keypoints
+	 */
 	public KeyPointVector detectKeypoints(Mat img) {
 		KeyPointVector keyPoints = new KeyPointVector();
-		//Detect img keypoints
 		if (detector != null) detector.detect(img, keyPoints);
 		return keyPoints;
 	}

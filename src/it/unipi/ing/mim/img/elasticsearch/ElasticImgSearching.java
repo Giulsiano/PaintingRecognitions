@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.bytedeco.opencv.opencv_core.DMatchVector;
@@ -40,10 +39,10 @@ import com.github.cliftonlabs.json_simple.JsonObject;
 import it.unipi.ing.mim.deep.ImgDescriptor;
 import it.unipi.ing.mim.deep.tools.Output;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
-import it.unipi.ing.mim.features.BoundingBox;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.FeaturesMatching;
 import it.unipi.ing.mim.features.FeaturesMatchingFiltered;
+import it.unipi.ing.mim.features.ImageBox;
 import it.unipi.ing.mim.features.KeyPointsDetector;
 import it.unipi.ing.mim.features.Ransac;
 import it.unipi.ing.mim.main.Centroid;
@@ -66,18 +65,23 @@ public class ElasticImgSearching implements AutoCloseable {
 	private RansacParameters ransacParameters;
 	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
-		//Initialize pivots, imgDescMap, REST
 		this(new RansacParameters(), topKSearch);
 	}
 	
 	public ElasticImgSearching (RansacParameters parameters, int topKSearch) throws ClassNotFoundException, IOException {
-		//Initialize pivots, imgDescMap, REST
 		ransacParameters = parameters;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
 	    this.topKqry = topKSearch; 
 	}
 	
+	/**
+	 * 
+	 * @param qryImage 
+	 * @param test true to compute statistics
+	 * @return
+	 * @throws Exception
+	 */
 	public String search (String qryImage, boolean test) throws Exception {
 		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +" is not a .jpg file format");
 		
@@ -96,7 +100,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
 
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry); //50);//
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry); 
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
 		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
@@ -112,6 +116,15 @@ public class ElasticImgSearching implements AutoCloseable {
 		client.close();
 	}
 	
+	/**
+	 * search for the k-nearest neighbors to the query image
+	 * @param queryString
+	 * @param k 
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	public List<String> search (String queryString, int k) throws ParseException, IOException, ClassNotFoundException{
 		List<String> res = new LinkedList<String>();
 
@@ -149,6 +162,14 @@ public class ElasticImgSearching implements AutoCloseable {
 		return searchRequest;
 	}
 	
+	/**
+	 * compute bag of features for the query image
+	 * @param query
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
 	@SuppressWarnings("unchecked")
 	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query) throws FileNotFoundException, ClassNotFoundException, IOException {
 		// Read centroids, compute distances of query to each of them
@@ -158,7 +179,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		Float[][] distancesFromCentroids = query.distancesTo(centroidList);
 		int[] qryLabel = new int[distancesFromCentroids.length];
 		
-		// Create the "label" of the cluster, that is an array of at which cluster the keypoint
+		// Create the array containing the label of the cluster at which the feature is
 		// considered belong to
 		Arrays.fill(qryLabel, 0);
 		float minValue = Float.MAX_VALUE;
@@ -170,7 +191,7 @@ public class ElasticImgSearching implements AutoCloseable {
 				}
 			}
 		}
-		// Compute frequencies of clusters the query belongs to
+		// Compute frequencies of clusters 
 		int[] frequencies = new int[centroidList.size()];
 		Arrays.fill(frequencies, 0);
 		for (int i = 0; i < qryLabel.length; ++i) {
@@ -188,6 +209,17 @@ public class ElasticImgSearching implements AutoCloseable {
 		return clusterFrequencies;
 	}
 	
+	/**
+	 * compute the one nearest neighbor to the query using RANSAC
+	 * @param neighbours
+	 * @param queryImg
+	 * @param qryImage
+	 * @param test
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws JsonException
+	 */
 	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg, String qryImage, boolean test) throws FileNotFoundException, IOException, JsonException {
 		
 		FeaturesMatching matcher = new FeaturesMatching();
@@ -211,10 +243,9 @@ public class ElasticImgSearching implements AutoCloseable {
 			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
  		}
 		
-		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
+		// Get the image with the best number of matches using RANSAC 
 		long maxInliers = 0;
 		Ransac ransac = new Ransac(ransacParameters);
-		Mat bestHomography = null;
 		Mat bestImg=null;
 		KeyPointVector bestKeypoints=null;
 		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
@@ -228,7 +259,6 @@ public class ElasticImgSearching implements AutoCloseable {
 				if (inliers > maxInliers) {
 					maxInliers = inliers;
 					bestGoodMatch = goodMatch;
-					bestHomography = ransac.getHomography();
 					bestImg= img;
 					bestKeypoints= keypoints;
 				}
@@ -243,8 +273,7 @@ public class ElasticImgSearching implements AutoCloseable {
 				
 				Mat imgMatches = new Mat();
 				drawMatches(  queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography,0);// queryImg.cols());
-				BoundingBox.imshow("RANSAC", imgMatches);
+				ImageBox.imshow("RANSAC", imgMatches);
 				waitKey();
 				destroyAllWindows();
 			}

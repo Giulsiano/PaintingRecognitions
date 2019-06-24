@@ -5,8 +5,10 @@ import org.bytedeco.opencv.opencv_core.DMatchVector;
 
 public class FeaturesMatchingFiltered {
 
+	/**
+	 * return the good matches
+	 */
 	public DMatchVector filterMatches(DMatchVector matches, int threshold) {
-		//return the good matches
 		long nGoodMatches = 0;
 		long numMatches = matches.size();
 		DMatchVector goodMatches = new DMatchVector(numMatches);

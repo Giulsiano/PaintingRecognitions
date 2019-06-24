@@ -19,8 +19,11 @@ public class FeaturesExtraction {
 		return extractor;
 	}
 
+	
+	/**
+	 * extract the local features
+	 */
 	public Mat extractDescriptor(Mat img, KeyPointVector keypoints) {
-		//extract the visual features
 		Mat descriptor = new Mat();
 		extractor.compute(img,  keypoints, descriptor);
 		return descriptor;

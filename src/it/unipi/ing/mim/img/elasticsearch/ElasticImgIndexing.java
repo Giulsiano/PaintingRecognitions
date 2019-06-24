@@ -48,7 +48,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 	private KmeansResults kmeansResults;
 
 	public ElasticImgIndexing(int topKIdx) throws IOException, ClassNotFoundException {
-		//Initialize pivots, imgDescDataset, REST
 		this.topKIdx = topKIdx;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 		client = new RestHighLevelClient(builder);
@@ -69,7 +68,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		File labelFile = Parameters.LABEL_FILE;
 		List<Centroid> centroidList = null;
 		try {
-			// Loading them from file for saving time and memory
+			// Loading centroids from file for saving time and memory
 			centroidList = (List<Centroid>) StreamManagement.load(pivotFile, List.class);
 		}
 		catch (FileNotFoundException e) {
@@ -123,15 +122,17 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return centroidList;
 	}
 	
+	/*
+	 * create the features Mat for kmeans
+	 */
 	private Mat createKmeansData (File descriptorFile) throws ClassNotFoundException {
-		// Get features randomly from each image
 		MatConverter matConverter = new MatConverter();
 		Mat bigmat = new Mat();
 		try {
 			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
 			while (true){
 				try {
-					// Read the matrix of features
+					// Read the matrix of features 
 					float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
 					bigmat.push_back(matConverter.float2Mat(feat));
 				}
@@ -186,12 +187,15 @@ public class ElasticImgIndexing implements AutoCloseable {
 		client.close();
 	}
 	
+	/**
+	 * check if the index already exist
+	 */
 	public boolean isESIndexExist (String idxName) throws IOException {
 		GetIndexRequest requestdel = new GetIndexRequest(Parameters.INDEX_NAME);
 		return client.indices().exists(requestdel, RequestOptions.DEFAULT);
 	}
 	
-	//TODO
+	
 	public void createIndex() throws IOException, ConnectException {
 		try {
 			// If the index already exists delete it, then rebuild it
@@ -238,7 +242,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 //	}
 	
 	private IndexRequest composeRequest(String id, String imgTxt) {			
-		//Initialize and fill IndexRequest Object with Fields.ID and Fields.IMG txt
+		//Initialize and fill IndexRequest Object with Fields.ID and Fields.IMG 
 		Map<String, String> jsonMap = new HashMap<>();
 		jsonMap.put(Fields.ID,id);
 		jsonMap.put(Fields.IMG, imgTxt);

@@ -18,6 +18,14 @@ public class BOF {
 	private static String DELIMITER = " ";
 	public static final File POSTING_LIST_FILE =  Parameters.POSTING_LISTS_FILE;
 	
+	/**
+	 * compute the posting list for each image to index
+	 * @param labels
+	 * @param numClusters
+	 * @param keypointPerImage
+	 * @param imgIds
+	 * @throws IOException
+	 */
 	@SuppressWarnings("unchecked")
 	public static void getPostingLists (Mat labels, int numClusters, List<Integer> keypointPerImage, List<String> imgIds) throws IOException{
 		IntRawIndexer labelIdx = labels.createIndexer();
@@ -53,6 +61,12 @@ public class BOF {
 		}
 	}
 	
+	/**
+	 * generate the text representation for the image
+	 * @param imgPostingList
+	 * @param topK k-Nearest Neighbor pivots 
+	 * @return
+	 */
 	public static String features2Text(SimpleEntry<Integer, Integer>[] imgPostingList, int topK) {
 		StringBuilder sb = new StringBuilder();
 		

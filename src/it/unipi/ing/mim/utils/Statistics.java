@@ -32,9 +32,10 @@ public class Statistics {
 	public static final File ransacParameterFile = new File("ransac_parameters.csv");
 	public static final File testSetFile = new File("test_set.csv");
 	
-	// True/False Positives/Negatives
-	// False positive means a retrieved image with matches but it isn't the searched image
-	// False negative is a non existent indexed image that is retrieved by the system
+	//	True positive: image correctly matched
+	//	True negative: image correctly not matched
+	//	False positive: image got from index but not correctly matched
+	//	False negative: indexed image but not matched
 	private int TP; 
 	private int FP;
 	private int TN;

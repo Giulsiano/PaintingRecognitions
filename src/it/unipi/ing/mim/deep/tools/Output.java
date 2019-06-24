@@ -45,7 +45,7 @@ public class Output {
 		html += "</tr>\n</table>\n";
 		html += "<div align='center' name=\"metadata\"><strong>Artist:</strong> "+ (String) metadata.get(Fields.ARTIST_NAME) + "</br>" +
 				"<strong>Title:</strong> "+ (String) metadata.get(Fields.TITLE) + "</br>" +
-				"<strong>Year:</strong> "+ (String)  metadata.get(Fields.YEAR)==null ? "Unknow": metadata.get(Fields.YEAR) + "</br>" +
+				"<strong>Year:</strong> "+ (String)  metadata.get(Fields.YEAR)==null ? "Unknown": metadata.get(Fields.YEAR) + "</br>" +
 				"</div>";
 		html += "</body>\n</html>";
 		

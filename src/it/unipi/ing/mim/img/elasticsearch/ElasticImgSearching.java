@@ -81,6 +81,13 @@ public class ElasticImgSearching implements AutoCloseable {
 	    this.bestGoodMatch.put("matchVector", null);
 	}
 	
+	/**
+	 * 
+	 * @param qryImage 
+	 * @param test true to compute statistics
+	 * @return
+	 * @throws Exception
+	 */
 	public String search (String qryImageName) 
 	        throws ClassNotFoundException, ParseException, IOException, JsonException {
 		if(!qryImageName.toLowerCase().endsWith("jpg")) 
@@ -146,6 +153,15 @@ public class ElasticImgSearching implements AutoCloseable {
 		return randomFeatures;
 	}
 	
+	/**
+	 * search for the k-nearest neighbors to the query image
+	 * @param queryString
+	 * @param k 
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	public List<String> search (String queryString, int k) throws ParseException, IOException, ClassNotFoundException{
 		List<String> res = new LinkedList<String>();
 
@@ -177,6 +193,14 @@ public class ElasticImgSearching implements AutoCloseable {
 		return searchRequest;
 	}
 	
+	/**
+	 * compute bag of features for the query image
+	 * @param query
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
 	@SuppressWarnings("unchecked")
 	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query)
 	        throws FileNotFoundException, ClassNotFoundException, IOException {
@@ -199,7 +223,7 @@ public class ElasticImgSearching implements AutoCloseable {
 				}
 			}
 		}
-		// Compute frequencies of clusters the query belongs to
+		// Compute frequencies of clusters 
 		int[] frequencies = new int[centroidList.size()];
 		Arrays.fill(frequencies, 0);
 		for (int i = 0; i < qryLabel.length; ++i) {
@@ -217,7 +241,19 @@ public class ElasticImgSearching implements AutoCloseable {
 		return clusterFrequencies;
 	}
 	
-	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) throws FileNotFoundException, IOException, JsonException {
+	/**
+	 * compute the one nearest neighbor to the query using RANSAC
+	 * @param neighbours
+	 * @param queryImg
+	 * @param qryImage
+	 * @param test
+	 * @return
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 * @throws JsonException
+	 */
+	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) 
+	        throws FileNotFoundException, IOException, JsonException {
 		
 		FeaturesMatching matcher = new FeaturesMatching();
 		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();

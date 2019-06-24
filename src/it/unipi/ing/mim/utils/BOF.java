@@ -91,18 +91,22 @@ public class BOF {
 	 * @return the posting list ready to be indexed
 	 */
 	public static String features2Text(SimpleEntry<Integer, Integer>[] imgPostingList, int topK) {
-		StringBuilder sb = new StringBuilder();
+		// Compute how many clusters have frequency bigger than 0 in order to avoid indexing clusters
+		// that image doesn't belong to
+		int topkTemp;
+		for (topkTemp = 0; imgPostingList[topkTemp].getValue() != 0; topkTemp++);
 		
-		SimpleEntry<Integer, Integer>[] topKPivot = Arrays.copyOf(imgPostingList, topK);
-		int topkTemp = topK;
-		for(int i = 0; i < topKPivot.length; i++) {
-			String id = topKPivot[i].getKey().toString();
+		// Create the text document to be indexed
+		StringBuilder sb = new StringBuilder();
+		SimpleEntry<Integer, Integer>[] topKClusters = Arrays.copyOf(imgPostingList, topK);
+		for(int i = 0; i < topKClusters.length; i++) {
+			String id = topKClusters[i].getKey().toString();
 			
 			for (int j = topkTemp; j > 0; j--) {
 				sb.append(id + DELIMITER);
 			}
-			topkTemp--;
 			sb.append('\n');
+			topkTemp--;
 		}
 		return sb.toString();
 	}

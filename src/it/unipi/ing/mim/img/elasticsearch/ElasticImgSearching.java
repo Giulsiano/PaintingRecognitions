@@ -130,8 +130,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		
 		//perform elasticsearch search
 		SearchResponse searchResponse = client.search(searchReq, RequestOptions.DEFAULT);
+		client.close();
 		SearchHit[] hits = searchResponse.getHits().getHits();
-		
 		res = new ArrayList<>(hits.length);	
 		for (int i = 0; i < hits.length; i++) {
 			Map<String, Object> metadata = hits[i].getSourceAsMap();
@@ -139,7 +139,6 @@ public class ElasticImgSearching implements AutoCloseable {
 			System.out.println("img: " + id + "\n Score: " + hits[i].getScore() );
 			res.add(id);
 		}
-		client.close();
 		return res;
 	}
 	

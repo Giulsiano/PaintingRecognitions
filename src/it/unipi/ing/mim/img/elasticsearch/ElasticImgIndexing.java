@@ -147,6 +147,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return bigmat;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void index () throws ClassNotFoundException {
 		try {
 			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(Parameters.POSTING_LISTS_FILE));
@@ -169,7 +170,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 					System.exit(1);
 				}
 				catch (IOException e) {
-					
+					System.err.println(e.getMessage());
 					e.printStackTrace();
 				}
 			}

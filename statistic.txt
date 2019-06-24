@@ -1,0 +1,559 @@
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 2,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 3,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 25
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: 0,000000
+Recall: 0,000000 
+Accuracy: 0,250000
+F-Score: NaN
+TN= 1 FP= 2
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 30
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: 0,000000
+Recall: 0,000000 
+Accuracy: 0,250000
+F-Score: NaN
+TN= 1 FP= 2
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 35
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 40
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 45
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 50
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 13
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 18
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 23
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 10
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 20
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 3
+FN= 1 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 2,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 3,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 25
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: 0,000000
+Recall: 0,000000 
+Accuracy: 0,250000
+F-Score: NaN
+TN= 1 FP= 1
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 30
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: 0,000000
+Recall: 0,000000 
+Accuracy: 0,250000
+F-Score: NaN
+TN= 1 FP= 1
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 35
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 40
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 45
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 50
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 13
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 18
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 23
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 10
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 2,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 3,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 25
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: 0,000000
+Recall: 0,000000 
+Accuracy: 0,250000
+F-Score: NaN
+TN= 1 FP= 1
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 30
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: 0,000000
+Recall: 0,000000 
+Accuracy: 0,250000
+F-Score: NaN
+TN= 1 FP= 1
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 35
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 40
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 45
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 50
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 4
+FN= 0 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 13
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 18
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 23
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 10
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 15
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+
+Run's Parameter:
+Distance Threshold: 34
+Min Ransac Inliers: 12
+Min Good Matches: 20
+PX threshold: 1,000000
+Precision: NaN
+Recall: 0,000000 
+Accuracy: 0,000000
+F-Score: NaN
+TN= 0 FP= 2
+FN= 2 TP= 0
+
+

@@ -1,6 +1,5 @@
 package it.unipi.ing.mim.utils;
 
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 import static org.bytedeco.opencv.global.opencv_imgproc.resize;
 
 import org.bytedeco.opencv.opencv_core.Mat;

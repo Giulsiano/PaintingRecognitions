@@ -33,10 +33,10 @@ public class Parameters {
 	public static final File RESULTS_HTML = new File("out/deep.seq.html");
 	public static final File RESULTS_HTML_ELASTIC = new File("out/deep.elastic.html");
 	public static final File RESULTS_HTML_REORDERED = new File("out/deep.reordered.html");
-		
+	
 	// Where are images to be indexed
-	public static final Path imgDir = FileSystems.getDefault().getPath("./wikiartVERA");
-
+	public static final Path imgDir = FileSystems.getDefault().getPath("wikiart");
+		
 	// Our parameters
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 34; // from 25 to 50

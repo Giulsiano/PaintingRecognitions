@@ -1,12 +1,9 @@
 package it.unipi.ing.mim.deep;
 
 import java.io.Serializable;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import org.bytedeco.javacpp.indexer.FloatRawIndexer;
 
 import it.unipi.ing.mim.main.Centroid;
 

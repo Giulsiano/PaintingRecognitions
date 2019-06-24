@@ -4,12 +4,12 @@ import static org.bytedeco.opencv.global.opencv_core.CV_32FC2;
 import static org.bytedeco.opencv.global.opencv_core.perspectiveTransform;
 import static org.bytedeco.opencv.global.opencv_imgproc.line;
 
-import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.opencv.opencv_core.Point;
-import org.bytedeco.opencv.opencv_core.Scalar;
 import org.bytedeco.javacpp.indexer.FloatIndexer;
 import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Point;
+import org.bytedeco.opencv.opencv_core.Scalar;
 
 public class BoundingBox {
 
@@ -35,7 +35,7 @@ public class BoundingBox {
 		Scalar scalar = new Scalar(255, 0, 0, 0);
 
 		FloatIndexer sceneCornersIdx = sceneCorners.createIndexer();
-
+		
 		int x0 = (int) sceneCornersIdx.get(0, 0, 0);
 		int y0 = (int) sceneCornersIdx.get(0, 0, 1);
 		x0 += shift;

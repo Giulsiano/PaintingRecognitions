@@ -46,6 +46,9 @@ public class Statistics {
 	
 	public static void main(String[] args) {
 		try{
+			System.out.println("Generating test_set.csv file");
+			createCsvFile();
+			
 			System.out.println("Start statistics program");
 			System.out.println("Read RANSAC parameters");
 			// Read RANSAC algorithm parameters from file and put them into a list 
@@ -53,6 +56,7 @@ public class Statistics {
 			BufferedReader parameterReader = new BufferedReader(new FileReader(ransacParameterFile));
 			String line = null; 
 			while ((line = parameterReader.readLine()) != null) {
+
 				if (!line.startsWith(COMMENT) && !line.contentEquals("")) {
 					String[] lineParameters = line.split(DELIMITER);
 					RansacParameters rp = new RansacParameters();
@@ -167,10 +171,11 @@ public class Statistics {
 		
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
-		for(String currTPImg: tpImages) { 
+		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 			try{
 				bestMatch = elasticImgSearch.search(currTPImg, true);
+				elasticImgSearch.close();
 				if(bestMatch == null) ++FN;
 				else {
 					// In case there is a best match try to compare the last part of the image's path
@@ -194,13 +199,36 @@ public class Statistics {
 
 		for(String currTNImg : tnImages) {
 			try{
-				ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
+			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
 	            bestMatch=elasticImgSearch.search(currTNImg, true);
+	            elasticImgSearch.close();
 				if(bestMatch == null) ++TN;
 				else ++FP;
 			}catch(IllegalArgumentException e) {
 				System.err.println(e.getMessage());
 			}
+		}
+	}
+	
+	public static void createCsvFile() {
+		String filepath = "";
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(testSetFile));
+			for (Path dir : Files.newDirectoryStream(tpImg)) {
+				if(!dir.toString().endsWith(".DS_Store")) {
+					// For each file into the directory
+					filepath = dir.toString();
+					String[] splitPath = filepath.split(File.separator);
+					String filename = splitPath[splitPath.length - 1];
+					bw.write(filename +","+filename+"\n");
+				}
+			}
+			bw.close();
+		}catch (IOException e) {
+
+			System.err.println("IOException file " + filepath);
+			e.printStackTrace();
+
 		}
 	}
 }

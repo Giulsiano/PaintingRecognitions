@@ -94,7 +94,7 @@ public class BOF {
 		// Compute how many clusters have frequency bigger than 0 in order to avoid indexing clusters
 		// that image doesn't belong to
 		int topkTemp;
-		for (topkTemp = 0; imgPostingList[topkTemp].getValue() != 0; topkTemp++);
+		for (topkTemp = 0; imgPostingList[topkTemp].getValue() > 0; topkTemp++);
 		
 		// Create the text document to be indexed
 		StringBuilder sb = new StringBuilder();

@@ -101,6 +101,7 @@ public class Statistics {
 				printFile.println();
 				printFile.println();
 				printFile.close();
+				statistics.resetStatstics();
 			}
 		} catch(ElasticsearchException e) {
 			System.err.println("Elasticsearch Exception");
@@ -132,6 +133,10 @@ public class Statistics {
 			System.err.println("Exiting");
 			System.exit(1);
 		}
+	}
+	
+	public void resetStatstics () {
+		TP = TN = FP = FN = 0;
 	}
 	
 	public Statistics(RansacParameters ransacParameter) {

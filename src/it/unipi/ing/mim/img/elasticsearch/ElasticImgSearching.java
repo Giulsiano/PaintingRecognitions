@@ -206,6 +206,10 @@ public class ElasticImgSearching implements AutoCloseable {
 			Mat img = ResizeImage.resizeImage(imread(neighbourName));
 			keypoints = detector.detectKeypoints(img);
 			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
+			if (imgFeatures.empty()) {
+				System.err.println("Can't compute ORB feature for " + neighbourName);
+				continue;
+			}
 			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
 			DMatchVector filteredMatches = filter.filterMatches(matches, ransacParameters.getDistanceThreshold());
 			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));

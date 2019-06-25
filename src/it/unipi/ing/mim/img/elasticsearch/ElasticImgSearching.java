@@ -11,9 +11,11 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -81,10 +83,11 @@ public class ElasticImgSearching implements AutoCloseable {
 	public String search (String qryImage, boolean test) throws Exception {
 		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +" is not a .jpg file format");
 		
-		// Read the image to search and extract its feature
-		MatConverter matConverter = new MatConverter();
-		
+		// Read the image to be searched and extract its feature
+		System.out.println("Reading image " + qryImage);
 		Mat queryImg = ResizeImage.resizeImage(imread(qryImage));
+		
+		System.out.println("Computing query features using SIFT");
 		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
 		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
 		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
@@ -93,17 +96,20 @@ public class ElasticImgSearching implements AutoCloseable {
 			System.err.println("Query image is not a valid image for extracting features");
 			System.exit(1);
 		}
-		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
-
+		float[][] queryFeatures = getRandomFeatures(queryDesc);
+		ImgDescriptor query = new ImgDescriptor(queryFeatures, qryImage);
+		
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.NUM_BOF_CLUSTERS); //50);//
+		System.out.println("Creating query feature-to-text");
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.NUM_BOF_ROWS);
+		System.out.println("Ask ElasticSearch to return "  +  Parameters.KNN + " neighbours");
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
+		// Compute the best good match if any
+		System.out.println("Computing best good match among neighbours");
 		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
-		
-		if(bestGoodMatchName==null) {
-			System.err.println("No good matches found for " + qryImage);
-		}
+		if (bestGoodMatchName==null) System.err.println("No good matches found for " + qryImage);
+		else System.out.println("Match found: " + bestGoodMatchName);
 		return bestGoodMatchName;
 	}
 	
@@ -112,25 +118,44 @@ public class ElasticImgSearching implements AutoCloseable {
 		client.close();
 	}
 	
+	public float[][] getRandomFeatures (Mat features){
+		long descriptorRows = features.rows();
+		float[][] randomFeatures = null;
+		if (descriptorRows > 0) {
+			MatConverter matConverter = new MatConverter();
+			if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
+				randomFeatures = matConverter.mat2float(features);
+			}
+			else {
+				// Get unique random numbers from RNG
+				Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
+				long times = Parameters.RANDOM_KEYPOINT_NUM;
+				for (long i = 0; i < times; ++i) {
+					int randValue = (int) (Math.random() * descriptorRows);
+					if (!randomRows.add(randValue)) --i;
+				}
+				// Make the matrix of whole features by taking random rows from the feature matrix
+				Mat featMat = new Mat();
+				randomRows.forEach((randRow) -> { featMat.push_back(features.row(randRow)); } );
+				randomFeatures = matConverter.mat2float(featMat);				
+			}
+		}
+		return randomFeatures;
+	}
+	
 	public List<String> search (String queryString, int k) throws ParseException, IOException, ClassNotFoundException{
 		List<String> res = new LinkedList<String>();
 
 		//call composeSearch to get SearchRequest object
 		SearchRequest searchReq= composeSearch(queryString, k);
 		
-		//perform elasticsearch search
-		Builder options = RequestOptions.DEFAULT.toBuilder();
-		options.setHttpAsyncResponseConsumerFactory(
-				new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(1000000000)
-				);
-		SearchResponse searchResponse = client.search(searchReq, options.build());
+		SearchResponse searchResponse = client.search(searchReq, RequestOptions.DEFAULT);//options.build());
 		client.close();
 		SearchHit[] hits = searchResponse.getHits().getHits();
 		res = new ArrayList<>(hits.length);	
 		for (int i = 0; i < hits.length; i++) {
 			Map<String, Object> metadata = hits[i].getSourceAsMap();
 			String id =  (String) metadata.get(Fields.ID);
-			System.out.println("img: " + id + "\n Score: " + hits[i].getScore() );
 			res.add(id);
 		}
 		return res;
@@ -207,7 +232,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			keypoints = detector.detectKeypoints(img);
 			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
 			if (imgFeatures.empty()) {
-				System.err.println("Can't compute ORB feature for " + neighbourName);
+				System.err.println("Can't compute ORB features for " + neighbourName);
 				continue;
 			}
 			DMatchVector matches = matcher.match(queryDesc, imgFeatures);

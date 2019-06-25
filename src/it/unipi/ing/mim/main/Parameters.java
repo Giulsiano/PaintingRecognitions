@@ -17,7 +17,7 @@ public class Parameters {
 	public static final File SRC_FOLDER = new File("./");
 	
 	//k-Nearest Neighbors
-	public static final int KNN = 30;
+	public static final int KNN = 50;
 
 	//Top K pivots For Indexing
 	public static final int TOP_K_IDX = 3500;
@@ -46,7 +46,7 @@ public class Parameters {
 	public static final double RANSAC_PX_THRESHOLD = 1.0;
 	
 	// Number of BOF repetition for highest priority cluster
-	public static final int NUM_BOF_CLUSTERS = 100;
+	public static final int NUM_BOF_ROWS = 100;
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
 	public static final int RANDOM_KEYPOINT_NUM = 100;

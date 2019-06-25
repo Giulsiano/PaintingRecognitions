@@ -77,12 +77,12 @@ public class BOF {
 	
 	/**
 	 * Translate posting lists to text string that can be indexed by ElasticSearch. The output is like:<br/>
-	 * 0 0 0 0 0 0 0
-	 * 1 1 1 1 1 1
-	 * 2 2 2 2 2
-	 * 3 3 3 3 
-	 * 4 4 4
-	 * 5 5
+	 * 0 0 0 0 0 0 0<br/>
+	 * 1 1 1 1 1 1<br/>
+	 * 2 2 2 2 2<br/>
+	 * 3 3 3 3 <br/>
+	 * 4 4 4<br/>
+	 * 5 5<br/>
 	 * 6
 	 * <br/>
 	 * where each number is the cluster ID with higher frequency starting from cluster 0

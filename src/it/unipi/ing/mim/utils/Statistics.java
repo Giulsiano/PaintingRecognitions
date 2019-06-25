@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.elasticsearch.ElasticsearchException;
 
@@ -196,9 +197,9 @@ public class Statistics {
 				if(bestMatch == null) ++FN;
 				else {
 					// In case there is a best match try to compare the last part of the image's path
-					String[] splitPath = bestMatch.split(File.separator);
+					String[] splitPath = bestMatch.split(Pattern.quote(File.separator));
 					bestMatch = splitPath[splitPath.length - 1];
-					splitPath = currTPImg.split(File.separator);
+					splitPath = currTPImg.split(Pattern.quote(File.separator));
 					String currTPImgName = splitPath[splitPath.length - 1];
 					//elasticImgSearch.close();
 					

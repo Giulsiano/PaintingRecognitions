@@ -65,7 +65,7 @@ public class SeqImageStorage {
 							}
 							// Save image name and number of extracted features
 							keypointPerImage.add(features.length);
-							imageNames.add(filename.toString());
+							imageNames.add(filename);
 							StreamManagement.append(new ImgDescriptor(features, filename), descriptorFile, ImgDescriptor.class);
 						}
 					}

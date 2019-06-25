@@ -23,10 +23,10 @@ public class Parameters {
 	public static final int TOP_K_IDX = 3500;
 	
 	//Top K pivots For Searching
-	public static final int TOP_K_QUERY = TOP_K_IDX;
+	public static final int TOP_K_QUERY = 1000;
 	
 	//Lucene Index
-	public static final String INDEX_NAME = "painting";
+	public static final String INDEX_NAME = "painting2";
 	
 	//HTML Output Parameters
 	public static final String BASE_URI = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/";
@@ -44,6 +44,9 @@ public class Parameters {
 	public static final int MIN_RANSAC_INLIERS = 12;
 	public static final int MIN_GOOD_MATCHES = 15;
 	public static final double RANSAC_PX_THRESHOLD = 1.0;
+	
+	// Number of BOF repetition for highest priority cluster
+	public static final int NUM_BOF_CLUSTERS = 100;
 
 	// Number of random keypoint chosen from keypoint computed by SIFT
 	public static final int RANDOM_KEYPOINT_NUM = 100;

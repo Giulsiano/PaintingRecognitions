@@ -158,7 +158,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 					String imgId = postingList.getKey();
 					SimpleEntry<Integer, Integer>[] clusterFrequencies = postingList.getValue();
 					System.out.println("Elaboration of indexing request for " + imgId);
-					String bof = BOF.features2Text(clusterFrequencies, topKIdx);
+					String bof = BOF.features2Text(clusterFrequencies, Parameters.NUM_BOF_CLUSTERS);
 					IndexRequest request = composeRequest(imgId, bof);
 					client.index(request, RequestOptions.DEFAULT);
 				}

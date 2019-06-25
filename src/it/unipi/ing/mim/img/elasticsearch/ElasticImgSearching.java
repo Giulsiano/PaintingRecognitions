@@ -183,11 +183,11 @@ public class ElasticImgSearching implements AutoCloseable {
 		Float[][] distancesFromCentroids = query.distancesTo(centroidList);
 		int[] qryLabel = new int[distancesFromCentroids.length];
 		
-		// Create the "label" of the cluster, that is an array of at which cluster the keypoint
-		// considered belong to
+		// Create the "label" of the cluster, that is an array of which cluster the keypoint
+		// considered belonging to
 		Arrays.fill(qryLabel, 0);
-		float minValue = Float.MAX_VALUE;
 		for (int i = 0; i < distancesFromCentroids.length; ++i) {
+			float minValue = Float.MAX_VALUE;
 			for (int j = 0; j < distancesFromCentroids[i].length; ++j) {
 				if (minValue > distancesFromCentroids[i][j]) {
 					minValue = distancesFromCentroids[i][j];

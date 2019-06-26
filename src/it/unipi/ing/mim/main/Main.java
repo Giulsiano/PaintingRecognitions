@@ -45,11 +45,11 @@ public class Main {
 				            Mat queryImg = (Mat) bestMatch.get("queryImg");
 				            KeyPointVector qryKeypoints = 
 				                    (KeyPointVector) bestMatch.get("queryKeypoints");
-				            Mat bestImg = (Mat) bestMatch.get("bestImage");
+				            Mat bestImg = (Mat) bestMatch.get("image");
 				            KeyPointVector bestKeyPoints = 
-                                    (KeyPointVector) bestMatch.get("bestImageKeypoints");
+                                    (KeyPointVector) bestMatch.get("imageKeypoints");
 				            DMatchVector matchVector = 
-				                    (DMatchVector) bestMatch.get("bestMatchVector");
+				                    (DMatchVector) bestMatch.get("matchVector");
 				            Mat homomography = (Mat) bestMatch.get("homomography");
 				            drawMatches(queryImg, qryKeypoints, bestImg , bestKeyPoints, matchVector, imgMatches);
 				            BoundingBox.addBoundingBox(imgMatches, queryImg, homomography, 0);// queryImg.cols());
@@ -76,6 +76,7 @@ public class Main {
 			catch (Exception e) {
 				System.err.println("Program generated an exception: " + e.getClass().getName() 
 						+ ":\n" + e.getMessage() + "\nExiting");
+				System.exit(1);
 			}
 		}
 	}

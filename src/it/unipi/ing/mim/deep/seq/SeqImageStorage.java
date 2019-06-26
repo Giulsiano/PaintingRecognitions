@@ -37,8 +37,7 @@ public class SeqImageStorage {
 	
 	public void extractFeatures(Path imgFolder) throws FileNotFoundException{
 		String filename = imgFolder.toString();
-		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
-		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
+		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
 		int imgCounter = 0;
 		
 		// For each directory into the main image directory
@@ -50,14 +49,13 @@ public class SeqImageStorage {
 						filename = file.toString();
 						if (filename.toLowerCase().endsWith(".jpg")) {
 							// Compute descriptors of the image
-							Mat image = imread(filename);
-							Mat resizedImage = ResizeImage.resizeImage(image);
-							KeyPointVector keypoints = detector.detectKeypoints(resizedImage);
-							Mat descriptor = extractor.extractDescriptor(resizedImage, keypoints);
-
-							// Store on file each descriptor's feature normalized. ImgDescriptor normalize
-							// the matrix into the constructor
-							System.out.println("Processing image #" + (++imgCounter) + ": " + filename);
+						    System.out.println("Processing image #" + (++imgCounter) + ": " + filename);
+							Mat descriptor = extractor.extractDescriptor(imread(filename));
+						    if (descriptor.empty()) {
+						        System.err.println("Can't compute features for " + filename);
+						        continue;
+						    }
+							// Get only some random feature from computed ones
 							float[][] features = getRandomFeatures(descriptor);
 							if (features == null || features.length == 0) {
 								System.err.println("!!!! "+ filename + ": Problem computing features. Features' matrix is empty");
@@ -66,7 +64,9 @@ public class SeqImageStorage {
 							// Save image name and number of extracted features
 							keypointPerImage.add(features.length);
 							imageNames.add(filename);
-							StreamManagement.append(new ImgDescriptor(features, filename), descriptorFile, ImgDescriptor.class);
+							StreamManagement.append(new ImgDescriptor(features, filename), 
+							                        descriptorFile, 
+							                        ImgDescriptor.class);
 						}
 					}
 				}

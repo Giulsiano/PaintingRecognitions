@@ -64,24 +64,30 @@ public class ElasticImgSearching implements AutoCloseable {
 	private RestHighLevelClient client;
 	private int topKqry;
 	private List<Centroid> centroidList = null;
+	private String ESIndexName;
 	
 	private RansacParameters ransacParameters;
 	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
-		//Initialize pivots, imgDescMap, REST
-		this(new RansacParameters(), topKSearch);
+		this(new RansacParameters(), topKSearch, Parameters.INDEX_NAME);
 	}
 	
-	public ElasticImgSearching (RansacParameters parameters, int topKSearch) throws ClassNotFoundException, IOException {
-		//Initialize pivots, imgDescMap, REST
+	public ElasticImgSearching (int topKSearch, String indexName) throws ClassNotFoundException, IOException {
+        this(new RansacParameters(), topKSearch, indexName);
+    }
+	
+	public ElasticImgSearching (RansacParameters parameters, int topKSearch, String indexName) {
 		ransacParameters = parameters;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
-	    this.topKqry = topKSearch; 
+	    this.topKqry = topKSearch;
+	    this.ESIndexName = indexName;
 	}
 	
-	public String search (String qryImage, boolean test) throws Exception {
-		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +" is not a .jpg file format");
+	public String search (String qryImage) 
+	        throws ClassNotFoundException, ParseException, IOException, JsonException {
+		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +
+		           " is not a .jpg file format");
 		
 		// Read the image to be searched and extract its feature
 		System.out.println("Reading image " + qryImage);
@@ -101,13 +107,13 @@ public class ElasticImgSearching implements AutoCloseable {
 		
 		// Make the search by computing the bag of feature of the query
 		System.out.println("Creating query feature-to-text");
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), Parameters.NUM_BOF_ROWS);
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry);
 		System.out.println("Ask ElasticSearch to return "  +  Parameters.KNN + " neighbours");
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
 		// Compute the best good match if any
 		System.out.println("Computing best good match among neighbours");
-		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
+		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, false);
 		if (bestGoodMatchName==null) System.err.println("No good matches found for " + qryImage);
 		else System.out.println("Match found: " + bestGoodMatchName);
 		return bestGoodMatchName;
@@ -168,7 +174,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		sb.query(queryBuild);
 		
 		// Build the request
-		SearchRequest searchRequest = new SearchRequest(Parameters.INDEX_NAME);
+		SearchRequest searchRequest = new SearchRequest(this.ESIndexName);
 		searchRequest.types("doc");
 		searchRequest.source(sb);
 		return searchRequest;

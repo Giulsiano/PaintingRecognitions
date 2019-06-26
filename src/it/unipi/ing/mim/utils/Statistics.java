@@ -3,7 +3,6 @@ package it.unipi.ing.mim.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -212,10 +211,11 @@ public class Statistics {
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
+			ElasticImgSearching elasticImgSearch= 
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, Parameters.INDEX_NAME);
 			try{
 				System.out.println("Searching for " + currTPImg);
-				bestMatch = elasticImgSearch.search(currTPImg, true);
+				bestMatch = elasticImgSearch.search(currTPImg);
 				elasticImgSearch.close();
 				if(bestMatch == null) ++FN;
 				else {
@@ -241,8 +241,9 @@ public class Statistics {
 
 		for(String currTNImg : tnImages) {
 			try{
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
-	            bestMatch=elasticImgSearch.search(currTNImg, true);
+			ElasticImgSearching elasticImgSearch=
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, Parameters.INDEX_NAME);
+	            bestMatch=elasticImgSearch.search(currTNImg);
 	            elasticImgSearch.close();
 				if(bestMatch == null) ++TN;
 				else ++FP;

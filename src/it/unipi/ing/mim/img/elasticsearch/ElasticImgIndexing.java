@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ConnectException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -43,25 +45,31 @@ public class ElasticImgIndexing implements AutoCloseable {
 	private static String PROTOCOL = "http";
 	
 	private int topKIdx;
+	private String ESIndexName;
 	
 	private RestHighLevelClient client;
 	private KmeansResults kmeansResults;
 
 	public ElasticImgIndexing(int topKIdx) throws IOException, ClassNotFoundException {
-		//Initialize pivots, imgDescDataset, REST
-		this.topKIdx = topKIdx;
-		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
-		client = new RestHighLevelClient(builder);
+		this(topKIdx, Parameters.INDEX_NAME);
 	}
 	
+	public ElasticImgIndexing(int topKIdx, String indexName) throws IOException, ClassNotFoundException {
+        this.topKIdx = topKIdx;
+        this.ESIndexName = indexName;
+        RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
+        client = new RestHighLevelClient(builder);
+    }
+	
 	@SuppressWarnings("unchecked")
-	public void indexAll(String[] args) throws Exception {
+	public void indexAll (String imgDir) throws Exception {
+	    Path imgRootDir = FileSystems.getDefault().getPath(imgDir);
 		MatConverter matConverter = new MatConverter();
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = Parameters.DESCRIPTOR_FILE;
 		if (!descFile.exists()) {
-			indexing.extractFeatures(Parameters.imgDir);
+			indexing.extractFeatures(imgRootDir);
 		}
 		// Compute centroids of the database
 		Mat labels = null;
@@ -158,7 +166,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 					String imgId = postingList.getKey();
 					SimpleEntry<Integer, Integer>[] clusterFrequencies = postingList.getValue();
 					System.out.println("Elaboration of indexing request for " + imgId);
-					String bof = BOF.features2Text(clusterFrequencies, Parameters.NUM_BOF_ROWS);
+					String bof = BOF.features2Text(clusterFrequencies, topKIdx);
 					IndexRequest request = composeRequest(imgId, bof);
 					client.index(request, RequestOptions.DEFAULT);
 				}
@@ -187,7 +195,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	}
 	
 	public boolean isESIndexExist (String idxName) throws IOException {
-		GetIndexRequest requestdel = new GetIndexRequest(Parameters.INDEX_NAME);
+		GetIndexRequest requestdel = new GetIndexRequest(ESIndexName);
 		return client.indices().exists(requestdel, RequestOptions.DEFAULT);
 	}
 	
@@ -195,16 +203,16 @@ public class ElasticImgIndexing implements AutoCloseable {
 	public void createIndex() throws IOException, ConnectException {
 		try {
 			// If the index already exists delete it, then rebuild it
-			if(isESIndexExist(Parameters.INDEX_NAME)) {
-				System.out.println("Delete index " + Parameters.INDEX_NAME);
-				DeleteIndexRequest deleteInd = new DeleteIndexRequest(Parameters.INDEX_NAME);
+			if(isESIndexExist(ESIndexName)) {
+				System.out.println("Delete index " + ESIndexName);
+				DeleteIndexRequest deleteInd = new DeleteIndexRequest(ESIndexName);
 				client.indices().delete(deleteInd, RequestOptions.DEFAULT);
 			}
 			
 			System.out.println("Create index");
 			//Create the Elasticsearch index
 			IndicesClient idx = client.indices();
-			CreateIndexRequest request = new CreateIndexRequest(Parameters.INDEX_NAME);
+			CreateIndexRequest request = new CreateIndexRequest(ESIndexName);
 			Builder s = Settings.builder()
 								.put("index.number_of_shards", 1)
 					            .put("index.number_of_replicas", 0)
@@ -219,24 +227,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 		}
 	}
 	
-//	@SuppressWarnings("unchecked")
-//	public void index() throws FileNotFoundException, ClassNotFoundException, IOException {
-//		Map<String, SimpleEntry<Integer, Integer>[]> postingLists = 
-//				(Map<String, SimpleEntry<Integer, Integer>[]>) StreamManagement.load(Parameters.POSTING_LISTS_FILE, Map.class);
-//		postingLists.forEach((imgId, postingList) -> {
-//				String temp = BOF.features2Text(postingList, topKIdx);
-//				IndexRequest request = composeRequest(imgId, temp);
-//				try {
-//					client.index(request, RequestOptions.DEFAULT);
-//				} catch(ConnectException e) {
-//					System.err.println("ElasticSearch server not running!");
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		);
-//	}
-	
 	private IndexRequest composeRequest(String id, String imgTxt) {			
 		//Initialize and fill IndexRequest Object with Fields.ID and Fields.IMG txt
 		Map<String, String> jsonMap = new HashMap<>();
@@ -244,7 +234,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 		jsonMap.put(Fields.IMG, imgTxt);
 		
 		IndexRequest request = null;
-		request = new IndexRequest(Parameters.INDEX_NAME, "doc");
+		request = new IndexRequest(ESIndexName, "doc");
 		request.source(jsonMap);
 		return request;
 	}

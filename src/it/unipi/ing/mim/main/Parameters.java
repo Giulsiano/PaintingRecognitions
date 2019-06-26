@@ -64,6 +64,6 @@ public class Parameters {
 	public static final File KEYPOINT_PER_IMAGE_FILE = new File(RANDOM_KEYPOINT_NUM + "keyPerImage.dat");
 	public static final File IMAGE_NAMES_FILE =  new File("imageNames.dat");
 
-	//Pivots File
-	public static final File PIVOTS_FILE = new File(RANDOM_KEYPOINT_NUM + "x" + NUM_KMEANS_CLUSTER + "pivot.dat");
+	//Cluster File
+	public static final File CLUSTER_FILE = new File(RANDOM_KEYPOINT_NUM + "x" + NUM_KMEANS_CLUSTER + "pivot.dat");
 }

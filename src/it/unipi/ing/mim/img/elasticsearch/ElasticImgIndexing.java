@@ -73,20 +73,20 @@ public class ElasticImgIndexing implements AutoCloseable {
 		}
 		// Compute centroids of the database
 		Mat labels = null;
-		File pivotFile =  Parameters.PIVOTS_FILE;
+		File clusterFile =  Parameters.CLUSTER_FILE;
 		File labelFile = Parameters.LABEL_FILE;
 		List<Centroid> centroidList = null;
 		try {
 			// Loading them from file for saving time and memory
 		    System.out.println("Loading centroids");
-			centroidList = (List<Centroid>) StreamManagement.load(pivotFile, List.class);
+			centroidList = (List<Centroid>) StreamManagement.load(clusterFile, List.class);
 		}
 		catch (FileNotFoundException e) {
 			// Compute centroids and store them to the disk
 			centroidList = computeClusterCentres(descFile);
 			labels = kmeansResults.getLabels();
 			System.out.println("Storing centroids to disk");
-			StreamManagement.store(centroidList, pivotFile, List.class);
+			StreamManagement.store(centroidList, clusterFile, List.class);
     		StreamManagement.store(matConverter.mat2int(labels), labelFile, int[][].class);
 		}
 		// Load labels from disk

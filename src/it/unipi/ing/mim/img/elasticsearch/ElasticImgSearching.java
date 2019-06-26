@@ -181,10 +181,11 @@ public class ElasticImgSearching implements AutoCloseable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query) throws FileNotFoundException, ClassNotFoundException, IOException {
+	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query)
+	        throws FileNotFoundException, ClassNotFoundException, IOException {
 		// Read centroids, compute distances of query to each of them
 		if (this.centroidList == null || this.centroidList.isEmpty()) {
-			this.centroidList =  (List<Centroid>) StreamManagement.load(Parameters.PIVOTS_FILE, List.class);
+			this.centroidList =  (List<Centroid>) StreamManagement.load(Parameters.CLUSTER_FILE, List.class);
 		}
 		Float[][] distancesFromCentroids = query.distancesTo(centroidList);
 		int[] qryLabel = new int[distancesFromCentroids.length];

@@ -78,21 +78,22 @@ public class ElasticImgIndexing implements AutoCloseable {
 		List<Centroid> centroidList = null;
 		try {
 			// Loading them from file for saving time and memory
+		    System.out.println("Loading centroids");
 			centroidList = (List<Centroid>) StreamManagement.load(pivotFile, List.class);
 		}
 		catch (FileNotFoundException e) {
 			// Compute centroids and store them to the disk
 			centroidList = computeClusterCentres(descFile);
 			labels = kmeansResults.getLabels();
+			System.out.println("Storing centroids to disk");
 			StreamManagement.store(centroidList, pivotFile, List.class);
     		StreamManagement.store(matConverter.mat2int(labels), labelFile, int[][].class);
 		}
 		// Load labels from disk
 		if (!centroidList.isEmpty()) {
-			System.out.println("Loaded centroids");
+		    System.out.println("Loading labels");
 			int[][] rawLabels = (int[][]) StreamManagement.load(labelFile, int[][].class);
 			labels = matConverter.int2Mat(rawLabels);
-			System.out.println("Loaded labels");
 		}
 		else {
 			System.err.println("No centroids have been found. Exiting.");
@@ -101,16 +102,18 @@ public class ElasticImgIndexing implements AutoCloseable {
 		// Create posting lists by counting frequencies of cluster per image and store it to disk
 		File postingListFile = Parameters.POSTING_LISTS_FILE;
 		if (!postingListFile.exists()) {
-			System.out.println("Computing posting lists to be indexed");
+			System.out.println("Computing and storing posting lists");
 			BOF.getPostingLists(labels, centroidList.size(), indexing.getKeypointPerImage(), 
 					indexing.getImageNames());
 		}
-		// Put images to the index
-		System.out.println("Start indexing");
-		this.createIndex();
-		this.index();
-		this.close();
-		System.out.println("End indexing");
+		else {
+		    // Put images to the index
+		    System.out.println("Start indexing");
+		    this.createIndex();
+		    this.index();
+		    this.close();
+		    System.out.println("End indexing");
+		}
 	}
 	
 	private List<Centroid> computeClusterCentres (File descFile) throws Exception{
@@ -122,7 +125,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 		Mat centroids = kmeansResults.getCentroids();
 		
 		// Store it for quickly access them on a second run of this program
-		System.out.println("Storing centroids to disk");
 		int rows = centroids.rows();
 		for (int i = 0; i < rows; i ++) {
 			Centroid c = new Centroid(centroids.row(i), i);
@@ -199,7 +201,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return client.indices().exists(requestdel, RequestOptions.DEFAULT);
 	}
 	
-	//TODO
 	public void createIndex() throws IOException, ConnectException {
 		try {
 			// If the index already exists delete it, then rebuild it
@@ -209,7 +210,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 				client.indices().delete(deleteInd, RequestOptions.DEFAULT);
 			}
 			
-			System.out.println("Create index");
+			System.out.println("Create index " + ESIndexName);
 			//Create the Elasticsearch index
 			IndicesClient idx = client.indices();
 			CreateIndexRequest request = new CreateIndexRequest(ESIndexName);

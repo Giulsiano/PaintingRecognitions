@@ -1,10 +1,25 @@
 package it.unipi.ing.mim.main;
 
+import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
+import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
+import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
+
+import java.util.Map;
+
+import org.bytedeco.opencv.opencv_core.DMatchVector;
+import org.bytedeco.opencv.opencv_core.KeyPointVector;
+import org.bytedeco.opencv.opencv_core.Mat;
+
+import com.github.cliftonlabs.json_simple.JsonObject;
+
+import it.unipi.ing.mim.deep.tools.Output;
+import it.unipi.ing.mim.features.BoundingBox;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgIndexing;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
+import it.unipi.ing.mim.utils.MetadataRetriever;
 
 public class Main {
-	
+	private static boolean showMatchWindow = false;
 	public static void main(String[] args) {
 		if (args.length < 2) printHelp();
 		else {
@@ -15,8 +30,33 @@ public class Main {
 				    case "search":
 				        ElasticImgSearching eis = 
 				                        new ElasticImgSearching(Parameters.TOP_K_QUERY, indexName);
-				        eis.search(args[1]);
+				        String bestGoodMatch = eis.search(args[1]);
 				        eis.close();
+				        
+				        if (bestGoodMatch != null) {
+				            JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch);
+			                String qryImagePath = Parameters.BASE_URI + args[1];
+			                String bestMatchPath = Parameters.BASE_URI + bestGoodMatch;
+			                Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
+				        }
+				        if (showMatchWindow) {
+				            Mat imgMatches = new Mat();
+				            Map<String, Object> bestMatch = eis.getBestGoodMatch();
+				            Mat queryImg = (Mat) bestMatch.get("queryImg");
+				            KeyPointVector qryKeypoints = 
+				                    (KeyPointVector) bestMatch.get("queryKeypoints");
+				            Mat bestImg = (Mat) bestMatch.get("bestImage");
+				            KeyPointVector bestKeyPoints = 
+                                    (KeyPointVector) bestMatch.get("bestImageKeypoints");
+				            DMatchVector matchVector = 
+				                    (DMatchVector) bestMatch.get("bestMatchVector");
+				            Mat homomography = (Mat) bestMatch.get("homomography");
+				            drawMatches(queryImg, qryKeypoints, bestImg , bestKeyPoints, matchVector, imgMatches);
+				            BoundingBox.addBoundingBox(imgMatches, queryImg, homomography, 0);// queryImg.cols());
+				            BoundingBox.imshow("RANSAC", imgMatches);
+				            waitKey();
+				            destroyAllWindows();
+				        }
 				        break;
 
 				    case "index":

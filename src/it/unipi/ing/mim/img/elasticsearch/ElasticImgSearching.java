@@ -11,6 +11,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -67,6 +68,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	private String ESIndexName;
 	
 	private RansacParameters ransacParameters;
+	private Map<String, Object> bestGoodMatch;
 	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
 		this(new RansacParameters(), topKSearch, Parameters.INDEX_NAME);
@@ -82,6 +84,13 @@ public class ElasticImgSearching implements AutoCloseable {
 	    client = new RestHighLevelClient(builder);
 	    this.topKqry = topKSearch;
 	    this.ESIndexName = indexName;
+	    this.bestGoodMatch = new HashMap<>();
+	    this.bestGoodMatch.put("queryImg", null);
+	    this.bestGoodMatch.put("queryKeypoints", null);
+	    this.bestGoodMatch.put("image", null);
+	    this.bestGoodMatch.put("imageKeypoints", null);
+	    this.bestGoodMatch.put("matchVector", null);
+	    this.bestGoodMatch.put("homomography", null);
 	}
 	
 	public String search (String qryImageName) 
@@ -109,9 +118,12 @@ public class ElasticImgSearching implements AutoCloseable {
 		
 		// Compute the best good match if any
 		System.out.println("Computing best good match among neighbours");
-		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, false);
-		if (bestGoodMatchName==null) System.err.println("No good matches found for " + qryImage);
-		else System.out.println("Match found: " + bestGoodMatchName);
+		String bestGoodMatchName= computeBestGoodMatch(neighbours, qryImg);
+		if (bestGoodMatchName==null) System.err.println("No good matches found for " + qryImageName);
+		else {
+		    System.out.println("Match found: " + bestGoodMatchName);
+		    
+		}
 		return bestGoodMatchName;
 	}
 	
@@ -261,25 +273,17 @@ public class ElasticImgSearching implements AutoCloseable {
 				}
 			}
 		}
+		// Put results into the map to retrieve information about best match
 		if (bestGoodMatch != null) {
-			if (test == false) {
-				JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
-				String qryImagePath = Parameters.BASE_URI + qryImage;
-				String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
-				Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-				
-				Mat imgMatches = new Mat();
-				drawMatches(  queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-				BoundingBox.addBoundingBox(imgMatches, queryImg, bestHomography,0);// queryImg.cols());
-				BoundingBox.imshow("RANSAC", imgMatches);
-				waitKey();
-				destroyAllWindows();
-			}
-			return bestGoodMatch.getKey();
+		    this.bestGoodMatch.put("queryImg", queryImg);
+	        this.bestGoodMatch.put("queryKeypoints", qryKeypoints);
+	        this.bestGoodMatch.put("image", bestImg);
+	        this.bestGoodMatch.put("imageKeypoints", bestKeypoints);
+	        this.bestGoodMatch.put("matchVector", bestGoodMatch.getValue());
+	        this.bestGoodMatch.put("homomography", bestHomography);
+	        return bestGoodMatch.getKey();
 		}
-		else {
-			return null;
-		}
+	    return null;
 	}
 
 	public RansacParameters getRansacParameters() {
@@ -288,5 +292,9 @@ public class ElasticImgSearching implements AutoCloseable {
 
 	public void setRansacParameters(RansacParameters ransacParameters) {
 		this.ransacParameters = ransacParameters;
+	}
+	
+	public Map<String, Object> getBestGoodMatch (){
+	    return bestGoodMatch;
 	}
 }

@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ConnectException;
+import java.nio.file.Path;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -55,13 +56,13 @@ public class ElasticImgIndexing implements AutoCloseable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void indexAll(String[] args) throws Exception {
+	public void indexAll(Path args) throws Exception {
 		MatConverter matConverter = new MatConverter();
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = Parameters.DESCRIPTOR_FILE;
 		if (!descFile.exists()) {
-			indexing.extractFeatures(Parameters.imgDir);
+			indexing.extractFeatures(args);//Parameters.imgDir);
 		}
 		// Compute centroids of the database
 		Mat labels = null;

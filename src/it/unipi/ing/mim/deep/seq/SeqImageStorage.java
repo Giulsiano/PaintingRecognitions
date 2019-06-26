@@ -57,10 +57,7 @@ public class SeqImageStorage {
 						    }
 							// Get only some random feature from computed ones
 							float[][] features = getRandomFeatures(descriptor);
-							if (features == null || features.length == 0) {
-								System.err.println("!!!! "+ filename + ": Problem computing features. Features' matrix is empty");
-								continue;
-							}
+							
 							// Save image name and number of extracted features
 							keypointPerImage.add(features.length);
 							imageNames.add(filename);
@@ -80,27 +77,25 @@ public class SeqImageStorage {
 		}
 	}
 	
-	public float[][] getRandomFeatures (Mat features){
-		long descriptorRows = features.rows();
+	public float[][] getRandomFeatures (Mat descriptor){
+		long descriptorRows = descriptor.rows();
 		float[][] randomFeatures = null;
-		if (descriptorRows > 0) {
-			MatConverter matConverter = new MatConverter();
-			if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
-				randomFeatures = matConverter.mat2float(features);
-			}
-			else {
-				// Get unique random numbers from RNG
-				Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
-				long times = Parameters.RANDOM_KEYPOINT_NUM;
-				for (long i = 0; i < times; ++i) {
-					int randValue = (int) (Math.random() * descriptorRows);
-					if (!randomRows.add(randValue)) --i;
-				}
-				// Make the matrix of whole features by taking random rows from the feature matrix
-				Mat featMat = new Mat();
-				randomRows.forEach((randRow) -> { featMat.push_back(features.row(randRow)); } );
-				randomFeatures = matConverter.mat2float(featMat);				
-			}
+		MatConverter matConverter = new MatConverter();
+		if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
+		    randomFeatures = matConverter.mat2float(descriptor);
+		}
+		else {
+		    // Get unique random numbers from RNG
+		    Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
+		    long times = Parameters.RANDOM_KEYPOINT_NUM;
+		    for (long i = 0; i < times; ++i) {
+		        int randValue = (int) (Math.random() * descriptorRows);
+		        if (!randomRows.add(randValue)) --i;
+		    }
+		    // Make the matrix of whole features by taking random rows from the feature matrix
+		    Mat featMat = new Mat();
+		    randomRows.forEach((randRow) -> featMat.push_back(descriptor.row(randRow)));
+		    randomFeatures = matConverter.mat2float(featMat);				
 		}
 		return randomFeatures;
 	}

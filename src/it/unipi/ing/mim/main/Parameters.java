@@ -19,11 +19,14 @@ public class Parameters {
 	//k-Nearest Neighbors
 	public static final int KNN = 50;
 
+	// Number of random keypoint chosen from keypoint computed by SIFT
+	public static final int RANDOM_KEYPOINT_NUM = 100;
+
 	//Top K pivots For Indexing
-	public static final int TOP_K_IDX = 3500;
+	public static final int TOP_K_IDX = RANDOM_KEYPOINT_NUM;
 	
 	//Top K pivots For Searching
-	public static final int TOP_K_QUERY = 1000;
+	public static final int TOP_K_QUERY = TOP_K_IDX;
 	
 	//Lucene Index
 	public static final String INDEX_NAME = "painting2";
@@ -47,9 +50,6 @@ public class Parameters {
 	
 	// Number of BOF repetition for highest priority cluster
 	public static final int NUM_BOF_ROWS = 100;
-
-	// Number of random keypoint chosen from keypoint computed by SIFT
-	public static final int RANDOM_KEYPOINT_NUM = 100;
 	
 	// ORB feature extraction parameters
 	public static final int ORB_MAX_FEATURE = 1000;

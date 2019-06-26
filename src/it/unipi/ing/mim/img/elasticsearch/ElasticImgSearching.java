@@ -95,16 +95,17 @@ public class ElasticImgSearching implements AutoCloseable {
 	
 	public String search (String qryImageName) 
 	        throws ClassNotFoundException, ParseException, IOException, JsonException {
-		if(!qryImageName.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImageName +
-		           " is not a .jpg file format");
+		if(!qryImageName.toLowerCase().endsWith("jpg")) 
+		    throw new IllegalArgumentException("Image " + qryImageName + " is not a .jpg file format");
 		
 		// Read the image to be searched and extract its feature
 		Mat qryImg = imread(qryImageName);
+		Mat resizedQryImg = ResizeImage.resizeImage(qryImg);
 		System.out.println("Computing query features using SIFT");
 		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
-		Mat queryDesc = extractor.extractDescriptor(imread(qryImageName));
+		Mat queryDesc = extractor.extractDescriptor(qryImg);
 		if (queryDesc.empty()) {
-			System.err.println("Query image is not a valid image for extracting features");
+			System.err.println("Can't extract features from " + qryImageName);
 			System.exit(1);
 		}
 		float[][] queryFeatures = getRandomFeatures(queryDesc);
@@ -118,7 +119,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		
 		// Compute the best good match if any
 		System.out.println("Computing best good match among neighbours");
-		String bestGoodMatchName= computeBestGoodMatch(neighbours, qryImg);
+		String bestGoodMatchName= computeBestGoodMatch(neighbours, resizedQryImg);
 		if (bestGoodMatchName==null) System.err.println("No good matches found for " + qryImageName);
 		else {
 		    System.out.println("Match found: " + bestGoodMatchName);
@@ -150,7 +151,7 @@ public class ElasticImgSearching implements AutoCloseable {
 				}
 				// Make the matrix of whole features by taking random rows from the feature matrix
 				Mat featMat = new Mat();
-				randomRows.forEach((randRow) -> { featMat.push_back(features.row(randRow)); } );
+				randomRows.forEach((randRow) -> featMat.push_back(features.row(randRow)));
 				randomFeatures = matConverter.mat2float(featMat);				
 			}
 		}

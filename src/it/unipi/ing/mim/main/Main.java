@@ -50,9 +50,8 @@ public class Main {
                                     (KeyPointVector) bestMatch.get("imageKeypoints");
 				            DMatchVector matchVector = 
 				                    (DMatchVector) bestMatch.get("matchVector");
-				            Mat homomography = (Mat) bestMatch.get("homomography");
 				            drawMatches(queryImg, qryKeypoints, bestImg , bestKeyPoints, matchVector, imgMatches);
-				            BoundingBox.addBoundingBox(imgMatches, queryImg, homomography, 0);// queryImg.cols());
+				            //BoundingBox.addBoundingBox(imgMatches, queryImg, homomography, 0);// queryImg.cols());
 				            BoundingBox.imshow("RANSAC", imgMatches);
 				            waitKey();
 				            destroyAllWindows();

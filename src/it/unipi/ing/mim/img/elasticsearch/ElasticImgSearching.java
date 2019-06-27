@@ -132,9 +132,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		long descriptorRows = features.rows();
 		float[][] randomFeatures = null;
 		if (descriptorRows > 0) {
-			MatConverter matConverter = new MatConverter();
 			if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
-				randomFeatures = matConverter.mat2float(features);
+				randomFeatures = MatConverter.mat2float(features);
 			}
 			else {
 				// Get unique random numbers from RNG
@@ -147,7 +146,7 @@ public class ElasticImgSearching implements AutoCloseable {
 				// Make the matrix of whole features by taking random rows from the feature matrix
 				Mat featMat = new Mat();
 				randomRows.forEach((randRow) -> featMat.push_back(features.row(randRow)));
-				randomFeatures = matConverter.mat2float(featMat);				
+				randomFeatures = MatConverter.mat2float(featMat);				
 			}
 		}
 		return randomFeatures;

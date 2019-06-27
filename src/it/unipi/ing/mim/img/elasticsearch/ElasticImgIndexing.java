@@ -64,7 +64,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 	@SuppressWarnings("unchecked")
 	public void indexAll (String imgDir) throws Exception {
 	    Path imgRootDir = FileSystems.getDefault().getPath(imgDir);
-		MatConverter matConverter = new MatConverter();
 		SeqImageStorage indexing = new SeqImageStorage();
 		System.out.println("Scanning image directory");
 		File descFile = Parameters.DESCRIPTOR_FILE;
@@ -87,13 +86,13 @@ public class ElasticImgIndexing implements AutoCloseable {
 			labels = kmeansResults.getLabels();
 			System.out.println("Storing centroids to disk");
 			StreamManagement.store(centroidList, clusterFile, List.class);
-    		StreamManagement.store(matConverter.mat2int(labels), labelFile, int[][].class);
+    		StreamManagement.store(MatConverter.mat2int(labels), labelFile, int[][].class);
 		}
 		// Load labels from disk
 		if (!centroidList.isEmpty()) {
 		    System.out.println("Loading labels");
 			int[][] rawLabels = (int[][]) StreamManagement.load(labelFile, int[][].class);
-			labels = matConverter.int2Mat(rawLabels);
+			labels = MatConverter.int2Mat(rawLabels);
 		}
 		else {
 			System.err.println("No centroids have been found. Exiting.");
@@ -137,7 +136,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 	 * create the features Mat for kmeans
 	 */
 	private Mat createKmeansData (File descriptorFile) throws ClassNotFoundException {
-		MatConverter matConverter = new MatConverter();
 		Mat bigmat = new Mat();
 		try {
 			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(descriptorFile));
@@ -145,7 +143,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 				try {
 					// Read the matrix of features 
 					float[][] feat = ((ImgDescriptor) ois.readObject()).getFeatures();
-					bigmat.push_back(matConverter.float2Mat(feat));
+					bigmat.push_back(MatConverter.float2Mat(feat));
 				}
 				catch (EOFException e) { 
 					break;

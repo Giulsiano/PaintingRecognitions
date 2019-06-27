@@ -48,7 +48,7 @@ public class FeaturesExtraction {
 	    Mat resizedImage = ResizeImage.resizeImage(img);
 	    keypoints = detector.detectKeypoints(resizedImage);
 	    Mat descriptor = new Mat();
-	    extractor.compute(img,  keypoints, descriptor);
+	    extractor.compute(resizedImage,  keypoints, descriptor);
 	    return descriptor;
 	}
 	

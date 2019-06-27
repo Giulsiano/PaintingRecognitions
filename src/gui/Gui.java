@@ -12,8 +12,10 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
@@ -26,6 +28,7 @@ import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -41,7 +44,12 @@ public class Gui extends Application{
 	String absoluteImagePath = "";
 	String absoluteImageFile = "";
 	it.unipi.ing.mim.main.Parameters mypar = new it.unipi.ing.mim.main.Parameters();
-	String LABEL_COLOR = "#8bc34a";
+	String background_color = "#00517c";
+	String text_color = "white";
+	String style = " -fx-background-color: " + background_color + 
+			"; -fx-text-fill: " + text_color +
+			"; -fx-font-weight: bold " +
+			"; -fx-font-size: 15pt;";
 	
 	
 	/**
@@ -56,24 +64,29 @@ public class Gui extends Application{
 	 */
 	private void initialize(Stage primaryStage) {
 		Button indbtn = new Button();
-		indbtn.setMaxSize(buttonw, buttonh);
-		indbtn.setMinSize(buttonw, buttonh);
+		indbtn.setPrefSize(buttonw, buttonh);
 		indbtn.setText("Start Indexing");
+		indbtn.setStyle(style);
 
 		Button srcbtn = new Button();
 		srcbtn.setPrefSize(buttonw, buttonh);
 		srcbtn.setText("Start Searching");
+		srcbtn.setStyle(style);
 
 		TextField indexname = new TextField();
 		indexname.setText("index_name");
+		indexname.setAlignment(Pos.CENTER);
+		indexname.setStyle(style);
 		
 		TextField pathname = new TextField();
 		pathname.setText("Select path to index");
 		pathname.setAlignment(Pos.CENTER);
+		pathname.setStyle(style);
 		
 		TextField filename = new TextField();
 		filename.setText("Select file to search");
 		filename.setAlignment(Pos.CENTER);
+		filename.setStyle(style);
 		
 		
         indbtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -125,12 +138,14 @@ public class Gui extends Application{
         //#8bc34a
         Label l = new Label("Do you want see the result image?");
         
-        l.setTextFill(Color.web(LABEL_COLOR));
-        l.setPrefHeight(50);
+        l.setStyle(style);
+        //l.setPrefHeight(50);
         
         ToggleGroup group = new ToggleGroup();
         RadioButton rbyes = new RadioButton("yes");
         RadioButton rbno = new RadioButton("no");
+        rbyes.setStyle(style);
+        rbno.setStyle(style);
         rbyes.setUserData("yes");
         rbno.setUserData("no");
         rbyes.setToggleGroup(group);
@@ -151,8 +166,14 @@ public class Gui extends Application{
         
         });
         
+        Pane pane = new Pane();
         GridPane root = new GridPane();
-        Image img = new Image(new File("/Users/valeriotanferna/git/PaintingRecognitions/src/gui/background.png").toURI().toString());
+        root.setMaxSize(500, 500);
+        root.setPrefSize(500, 500);
+        Scene scene = new Scene(root, 966, 652);//, Color.CHOCOLATE); //Color. ... does not work TODO
+        primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        Image img = new Image(new File("./src/gui/background.png").toURI().toString());
         BackgroundImage bgi = new BackgroundImage(
         		img, 
         		BackgroundRepeat.NO_REPEAT, 
@@ -160,16 +181,11 @@ public class Gui extends Application{
         		BackgroundPosition.DEFAULT, 
         		new BackgroundSize(BackgroundSize.AUTO,BackgroundSize.AUTO, false, false, true, false));
         root.setBackground(new Background(bgi));
-        root.setPrefSize(500, 500);
+        //root.setPrefSize(50, 50);
         root.setAlignment(Pos.CENTER);
         root.setHgap(10);
         root.setVgap(10);
         root.setPadding(new Insets(25, 25, 25, 25));
-        
-        
-
-        Scene scene = new Scene(root, 966, 652);
-        primaryStage.setScene(scene);
         
         root.add(indexname, 0, 0);
         root.add(pathname, 0, 1);
@@ -179,7 +195,16 @@ public class Gui extends Application{
         root.add(l, 0, 3);
         root.add(rbyes, 0, 4);
         root.add(rbno, 1, 4);
-
+//        for(Node i: root.getChildren()) {
+//        	if(i instanceof Control) {
+//        		Control control = (Control) i;
+//        		control.setStyle(" -fx-background-color: "+ background_color+";");
+//        		//control.setStyle(" -fx-border-color: #00517c;");
+//        		//control.setStyle(" -fx-text-fill: #ffffff;"); //TODO NON FUNZIONSDJBHLFBHJAFGBHJADGHBJFG
+//        	}
+//        }
+//        
+        
         root.setGridLinesVisible(true);
 
         primaryStage.setTitle("Painting Recognition");

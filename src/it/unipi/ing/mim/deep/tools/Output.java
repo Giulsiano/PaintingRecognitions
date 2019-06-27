@@ -15,17 +15,6 @@ public class Output {
 
 	public static final int COLUMNS = 2;
 	
-	public static void main(String[] args) {
-		Map<String, Object> m = new HashMap<>();
-		m.put(Fields.ARTIST_NAME, "John Smith");
-		m.put(Fields.TITLE, "John Smith");
-		m.put(Fields.YEAR, "Dum�n");
-		String qryUri = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/photo5764702944778891453.jpg";
-		String imgUri = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/ni-zan/autumn-wind-in-gemstones-trees.jpg";
-		File outfile = new File("john_smith.html");
-		toHTML(m, qryUri, imgUri, outfile);
-	}
-	
 	public static void toHTML(Map<String, Object> metadata, String qryURI, String imgURI, File outFile) {
 		String html = "<html><head><title>Painting Recognition</title></head>\n" +
 					  "<body>\n<div align='center'\"><h1>Painting Recognition</h1></div>\n" +
@@ -43,15 +32,15 @@ public class Output {
 					"' src='" + ((i == 0) ? qryURI : imgURI) + "'></td>\n";
 		}
 		html += "</tr>\n</table>\n";
-		html += "<div align='center' name=\"metadata\"><strong>Artist:</strong> "+ (String) metadata.get(Fields.ARTIST_NAME) + "</br>" +
-				"<strong>Title:</strong> "+ (String) metadata.get(Fields.TITLE) + "</br>" +
-				"<strong>Year:</strong> "+ (String)  metadata.get(Fields.YEAR)==null ? "Unknown": metadata.get(Fields.YEAR) + "</br>" +
+		html += "<div align='center' name=\"metadata\"><strong>Artist:</strong> "+ (String) metadata.get(Fields.ARTIST_NAME) + "<br/>" +
+				"<strong>Title:</strong> "+ (String) metadata.get(Fields.TITLE) + "<br/>" +
+				"<strong>Year:</strong> "+ ((String)  metadata.get(Fields.YEAR)==null ? "Unknown": metadata.get(Fields.YEAR)) + "<br/>" +
 				"</div>";
 		html += "</body>\n</html>";
 		
 		try {
 	        string2File(html, outFile);
-			System.out.print("html generated");
+			System.out.println("html generated");
         } catch (IOException e) {
 	        e.printStackTrace();
         }
@@ -78,9 +67,8 @@ public class Output {
 		
 		try {
 	        string2File(html, outputFile);
-			System.out.print("html generated");
+			System.out.println("html generated");
         } catch (IOException e) {
-	        // TODO Auto-generated catch block
 	        e.printStackTrace();
         }
 	}

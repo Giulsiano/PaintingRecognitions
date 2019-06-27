@@ -25,7 +25,7 @@ public class Parameters {
     public static final String INDEX_NAME = "painting2";
     
     //HTML Output Parameters
-    public static final String BASE_URI = "file:///" + Parameters.SRC_FOLDER.getAbsolutePath() + "/";
+    public static final String BASE_URI = Parameters.SRC_FOLDER.toURI().toString();
     public static final File RESULTS_HTML = new File("out/deep.seq.html");
     
     //Images to be indexed

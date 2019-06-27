@@ -1,8 +1,5 @@
 package it.unipi.ing.mim.img.elasticsearch;
 
-import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
 import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
 
 import java.io.FileNotFoundException;
@@ -25,9 +22,7 @@ import org.bytedeco.opencv.opencv_core.KeyPointVector;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RequestOptions.Builder;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -37,10 +32,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.github.cliftonlabs.json_simple.JsonException;
-import com.github.cliftonlabs.json_simple.JsonObject;
 
 import it.unipi.ing.mim.deep.ImgDescriptor;
-import it.unipi.ing.mim.deep.tools.Output;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
 import it.unipi.ing.mim.features.FeaturesExtraction;
 import it.unipi.ing.mim.features.FeaturesMatching;
@@ -53,7 +46,6 @@ import it.unipi.ing.mim.main.Parameters;
 import it.unipi.ing.mim.main.RansacParameters;
 import it.unipi.ing.mim.utils.BOF;
 import it.unipi.ing.mim.utils.MatConverter;
-import it.unipi.ing.mim.utils.MetadataRetriever;
 import it.unipi.ing.mim.utils.ResizeImage;
 
 public class ElasticImgSearching implements AutoCloseable {
@@ -89,7 +81,6 @@ public class ElasticImgSearching implements AutoCloseable {
 	    this.bestGoodMatch.put("image", null);
 	    this.bestGoodMatch.put("imageKeypoints", null);
 	    this.bestGoodMatch.put("matchVector", null);
-	    this.bestGoodMatch.put("homomography", null);
 	}
 	
 	/**
@@ -173,6 +164,15 @@ public class ElasticImgSearching implements AutoCloseable {
 		return randomFeatures;
 	}
 	
+	/**
+	 * search for the k-nearest neighbors to the query image
+	 * @param queryString
+	 * @param k 
+	 * @return
+	 * @throws ParseException
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	public List<String> search (String queryString, int k) throws ParseException, IOException, ClassNotFoundException{
 		List<String> res = new LinkedList<String>();
 
@@ -263,7 +263,9 @@ public class ElasticImgSearching implements AutoCloseable {
 	 * @throws IOException
 	 * @throws JsonException
 	 */
-	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) throws FileNotFoundException, IOException, JsonException {
+	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) 
+	        throws FileNotFoundException, IOException, JsonException {
+		
 		FeaturesMatching matcher = new FeaturesMatching();
 		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();
 		List<SimpleEntry<String, DMatchVector>> goodMatches = new LinkedList<>();
@@ -287,7 +289,6 @@ public class ElasticImgSearching implements AutoCloseable {
 		// Get the image with the best number of matches using RANSAC 
 		long maxInliers = 0;
 		Ransac ransac = new Ransac(ransacParameters);
-		Mat bestHomography = null;
 		Mat bestImg=null;
 		KeyPointVector bestKeypoints=null;
 		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
@@ -301,7 +302,6 @@ public class ElasticImgSearching implements AutoCloseable {
 				if (inliers > maxInliers) {
 					maxInliers = inliers;
 					bestGoodMatch = goodMatch;
-					bestHomography = ransac.getHomography();
 					bestImg= img;
 					bestKeypoints= keypoints;
 				}
@@ -314,7 +314,6 @@ public class ElasticImgSearching implements AutoCloseable {
 	        this.bestGoodMatch.put("image", bestImg);
 	        this.bestGoodMatch.put("imageKeypoints", bestKeypoints);
 	        this.bestGoodMatch.put("matchVector", bestGoodMatch.getValue());
-	        this.bestGoodMatch.put("homomography", bestHomography);
 	        return bestGoodMatch.getKey();
 		}
 	    return null;

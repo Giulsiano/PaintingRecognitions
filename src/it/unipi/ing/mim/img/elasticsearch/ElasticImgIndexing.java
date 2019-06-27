@@ -77,10 +77,11 @@ public class ElasticImgIndexing implements AutoCloseable {
 		File labelFile = Parameters.LABEL_FILE;
 		List<Centroid> centroidList = null;
 		try {
+
 			// Loading centroids from file for saving time and memory
-		    System.out.println("Loading centroids");
+	    System.out.println("Loading centroids");
 			centroidList = (List<Centroid>) StreamManagement.load(clusterFile, List.class);
-		}
+	}
 		catch (FileNotFoundException e) {
 			// Compute centroids and store them to the disk
 			centroidList = computeClusterCentres(descFile);

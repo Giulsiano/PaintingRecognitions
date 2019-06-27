@@ -43,8 +43,8 @@ public class Parameters {
 	
 	// Number of BOF repetition for highest priority cluster
 	public static final int NUM_BOF_ROWS = 100;
-	
-	// ORB feature extraction parameters
+
+    // ORB feature extraction parameters
 	public static final int ORB_MAX_FEATURE = 1000;
 	
 	// Megapixel per image
@@ -55,9 +55,11 @@ public class Parameters {
 	public static final File DESCRIPTOR_FILE = new File("descriptors" + RANDOM_KEYPOINT_NUM + ".dat");
 	public static final File IMAGE_NAMES_FILE =  new File("imageNames.dat");
 
+
+	//Cluster File
+	public static final File CLUSTER_FILE = new File(RANDOM_KEYPOINT_NUM + "x" + NUM_KMEANS_CLUSTER + "pivot.dat");
+	
 	public static final File LABEL_FILE = new File("labels" + RANDOM_KEYPOINT_NUM + "x" + NUM_KMEANS_CLUSTER + ".dat");
 	public static final File POSTING_LISTS_FILE =  new File("posting_lists" + RANDOM_KEYPOINT_NUM + "x" + NUM_KMEANS_CLUSTER + ".dat");
 	
-	//Cluster File
-	public static final File CLUSTER_FILE = new File(RANDOM_KEYPOINT_NUM + "x" + NUM_KMEANS_CLUSTER + "pivot.dat");
 }

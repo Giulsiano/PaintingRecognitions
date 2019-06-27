@@ -4,6 +4,8 @@ import java.io.File;
 
 import javax.swing.JScrollPane;
 
+import com.sun.org.apache.xalan.internal.xsltc.runtime.Parameter;
+
 import it.unipi.ing.mim.main.Main;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -86,7 +88,7 @@ public class Gui extends Application{
 		srcbtn.setStyle(style);
 
 		TextField indexname = new TextField();
-		indexname.setText("Enter_index_name");
+		indexname.setText("enter index name");
 		indexname.setAlignment(Pos.CENTER);
 		indexname.setStyle(style2);
 		
@@ -109,7 +111,7 @@ public class Gui extends Application{
                 //selectpath(primaryStage);
                 
                 if(!absoluteImagePath.equals("")) {
-                	Main.main(new String[]{"index", absoluteImagePath,"-i", indexname.getText()});
+                	Main.main(new String[]{"index", absoluteImagePath,"-i", indexname.getText().contentEquals("enter index name")? mypar.INDEX_NAME : indexname.getText()});
 				}
             }
         });
@@ -122,7 +124,7 @@ public class Gui extends Application{
 				//selectfile(primaryStage);
 				
 				if(!absoluteImageFile.equals("")) {
-					Main.main(new String[]{"search", absoluteImageFile,"-i", indexname.getText()});
+					Main.main(new String[]{"search", absoluteImageFile,"-i", indexname.getText().contentEquals("enter index name")? mypar.INDEX_NAME : indexname.getText()});
 				}
             }
         });

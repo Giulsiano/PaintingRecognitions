@@ -1,12 +1,15 @@
 package gui;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import it.unipi.ing.mim.img.elasticsearch.ElasticImgIndexing;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
+import it.unipi.ing.mim.main.Parameters;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -17,15 +20,19 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public class Gui extends Application{
 
 	private JFrame frame;
 	JScrollPane sp;
-	String absoluteImagePath = "";
+	Path absoluteImagePath = null;
+	String absoluteImageFile = "";
 	JTextArea txtArea = new JTextArea(200, 200);
 	it.unipi.ing.mim.main.Parameters mypar = new it.unipi.ing.mim.main.Parameters();
 	
@@ -65,17 +72,37 @@ public class Gui extends Application{
 	 */
 	private void initialize(Stage primaryStage) {
 		Button indbtn = new Button();
-        indbtn.setText("Start Indexing");
+		indbtn.setText("Start Indexing");
+
+		Button srcbtn = new Button();
+		srcbtn.setText("Start Searching");
+
+		ScrollPane s1 = new ScrollPane();
+		
+		Text indexname = new Text();
+		Text pathname = new Text();
+		
         indbtn.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
             public void handle(ActionEvent event) {
                 System.out.println("Puppa forte World!");
+                selectpath(primaryStage);
+                
+                if(!absoluteImagePath.equals("")) {
+					ElasticImgSearching eis;
+					try {
+						ElasticImgIndexing eii = new ElasticImgIndexing(mypar.TOP_K_IDX);
+						eii.indexAll(absoluteImagePath.toString());
+						eii.close();
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+				}
             }
         });
         
-        Button srcbtn = new Button();
-        srcbtn.setText("Start Searching");
         srcbtn.setOnAction(new EventHandler<ActionEvent>() {
  
             @Override
@@ -83,11 +110,11 @@ public class Gui extends Application{
             	System.out.println("Search button pressed");
 				selectfile(primaryStage);
 				
-				if(!absoluteImagePath.equals("")) {
+				if(!absoluteImageFile.equals("")) {
 					ElasticImgSearching eis;
 					try {
 						eis = new ElasticImgSearching(mypar.TOP_K_QUERY);
-						eis.search(absoluteImagePath, false);
+						eis.search(absoluteImageFile);
 						eis.close();
 					} catch (Exception e1) {
 						// TODO Auto-generated catch block
@@ -97,12 +124,18 @@ public class Gui extends Application{
             }
         });
         
-        ScrollPane s1 = new ScrollPane();
-        TextArea txtarea = new TextArea();
+        //TODO
+        indexname.setOnMouseClicked(new EventHandler<ActionEvent>() {
+        	 
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("Puppa forte World!");
+                selectpath(primaryStage);
+                
+            }
+        });
         
         txtArea.setEditable(false);
-        
-        s1.setContent(txtarea);
         
         GridPane root = new GridPane();
         root.setAlignment(Pos.CENTER);
@@ -115,9 +148,10 @@ public class Gui extends Application{
         Scene scene = new Scene(root, 300, 275);
         primaryStage.setScene(scene);
         
-        root.add(indbtn, 0, 0);
-        root.add(srcbtn, 0, 1);
-        root.add(s1, 0, 2);
+        root.add(indexname, 0, 0);
+        root.add(indbtn, 1, 0);
+        root.add(pathname, 0, 1);
+        root.add(srcbtn, 1, 1);
 
         root.setGridLinesVisible(true);
         
@@ -222,10 +256,21 @@ public class Gui extends Application{
 				new ExtensionFilter("JPEG Files", "*.jpg"));
 		File selectedFile = fileChooser.showOpenDialog(primaryStage);
 		if (selectedFile != null) {
-			absoluteImagePath = selectedFile.getAbsolutePath();
+			absoluteImageFile = selectedFile.getAbsolutePath();
 		}
 	}
 
+	private void selectpath(Stage primaryStage) {
+		System.out.println("selectFile called");
+		DirectoryChooser directoryChooser = new DirectoryChooser();
+		directoryChooser.setTitle("Open Resource Path");
+		File selectedDirectory = directoryChooser.showDialog(primaryStage);
+		
+		if (selectedDirectory != null) {
+			absoluteImagePath = selectedDirectory.toPath();
+		}
+	}
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub

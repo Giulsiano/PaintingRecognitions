@@ -77,7 +77,7 @@ public class Main {
 				System.err.println("Program generated an exception: " + e.getClass().getName() 
 						+ ":\n" + e.getMessage() + "\nExiting");
 				System.exit(1);
-			}
+	}
 		}
 	}
 	

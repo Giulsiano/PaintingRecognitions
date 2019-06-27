@@ -32,7 +32,7 @@ public class Statistics {
 	/**
 	 * ElasticSearch index name to query for match images on
 	 */
-	private static String indexName = Parameters.INDEX_NAME;
+	public static String ESindexName = Parameters.INDEX_NAME;
 	
     /**
 	 * Output file where this class will store results, one for each run. The total number of runs is
@@ -91,8 +91,9 @@ public class Statistics {
 		    outputFile = new File(fileNames[0]);
 		    ransacParameterFile = new File(fileNames[1]);
 		    testSetFile = new File(fileNames[2]);
-		    tnImg = FileSystems.getDefault().getPath(fileNames[3]);
-		    tpImg = FileSystems.getDefault().getPath(fileNames[4]);
+		    tpImg = FileSystems.getDefault().getPath(fileNames[3]);
+		    tnImg = FileSystems.getDefault().getPath(fileNames[4]);
+		    ESindexName = indexName;
 			System.out.println("Gathering statistics into " + outputFile.toString());
 			System.out.println("Read RANSAC parameters");
 			
@@ -238,7 +239,7 @@ public class Statistics {
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
 			ElasticImgSearching elasticImgSearch= 
-			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, Parameters.INDEX_NAME);
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, ESindexName);
 			try{
 				System.out.println("Searching for " + currTPImg);
 				bestMatch = elasticImgSearch.search(currTPImg);
@@ -267,7 +268,7 @@ public class Statistics {
 		for(String currTNImg : tnImages) {
 			try{
 			ElasticImgSearching elasticImgSearch=
-			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, Parameters.INDEX_NAME);
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, ESindexName);
 	            bestMatch=elasticImgSearch.search(currTNImg);
 	            elasticImgSearch.close();
 				if(bestMatch == null) ++TN;
@@ -301,7 +302,7 @@ public class Statistics {
 	}
 	
    public void setIndexName(String indexName) {
-        this.indexName = indexName;
+        this.ESindexName = indexName;
     }
 
 }

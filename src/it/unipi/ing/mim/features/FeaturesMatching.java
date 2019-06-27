@@ -12,11 +12,16 @@ public class FeaturesMatching {
 
 	private DescriptorMatcher matcher;
 	
+	/**
+	 * initialize matcher with the hamming distance to match ORBs
+	 */
 	public FeaturesMatching() {
-		//initialize matcher
 		matcher = new BFMatcher(Hamming.normType, true);
 	}
 
+	/**
+	 * find the best match 
+	 */
 	public DMatchVector match(Mat queryDescriptors, Mat trainDescriptors) {
 		DMatchVector matchVector = new DMatchVector();
 		if (matcher != null) matcher.match(queryDescriptors, trainDescriptors, matchVector);

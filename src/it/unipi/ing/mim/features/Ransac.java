@@ -24,6 +24,9 @@ public class Ransac {
 		this.parameters = parameters;
 	}
 
+	/**
+	 * compute homography between two images
+	 */
 	public void computeHomography(DMatchVector goodMatches, KeyPointVector keypointsObject,
 								  KeyPointVector keypointsScene) {
 
@@ -52,6 +55,9 @@ public class Ransac {
 		return inliers;
 	}
 	
+	/**
+	 * count the inliers
+	 */
 	public int countNumInliers() {
 		UByteRawIndexer index = inliers.createIndexer();
 		int count = 0;

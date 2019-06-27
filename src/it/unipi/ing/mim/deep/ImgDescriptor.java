@@ -13,9 +13,9 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 	
 	private float[][] features; // image feature
 	
-	private String id; // unique id of the image (usually file name)
+	private String id; // image name
 	
-	private double dist; // used for sorting purposes
+	private double dist; 
 	
 	public ImgDescriptor(float[][] features, String id) {
 		this.features = new float[features.length][];
@@ -55,6 +55,11 @@ public class ImgDescriptor implements Serializable, Comparable<ImgDescriptor> {
 		return Double.valueOf(dist).compareTo(arg0.dist);
 	}
 	 
+	/**
+	 * it computes distance to each cluster centroid for each image feature,
+	 * @param centroids
+	 * @return
+	 */
 	public Float[][] distancesTo (List<Centroid> centroids) {
 		Float[][] distances = new Float[features.length][];
 		

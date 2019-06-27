@@ -29,17 +29,40 @@ import it.unipi.ing.mim.main.RansacParameters;
 public class Statistics {
 	private static final String DELIMITER = ",";
 	private static final String COMMENT = "#";
-	public static final File outputFile = new File("statistic.txt");
-	public static final File ransacParameterFile = new File("ransac_parameters.csv");
-	public static final File testSetFile = new File("test_set.csv");
 	
-	// True/False Positives/Negatives
-	// False positive means a retrieved image with matches but it isn't the searched image
-	// False negative is a non existent indexed image that is retrieved by the system
-	private int TP; 
-	private int FP;
-	private int TN;
-	private int FN;
+	/**
+	 * ElasticSearch index name to query for match images on
+	 */
+	public static String ESindexName = Parameters.INDEX_NAME;
+	
+    /**
+	 * Output file where this class will store results, one for each run. The total number of runs is
+	 * determined by the number of rows in {@link Statistics#ransacParameter}
+	 */
+	public static File outputFile = new File("statistic.txt");
+	
+	/**
+	 * File that has to be a CSV with this format:<br/>
+	 * a,b,c,d <br/>
+	 * where a = Distance Threshold, b = Min Ransac Inliers, c = Min Good Matches, d = Px Threshold<br/>
+	 * For example: 30,12,15,1.0
+	 */
+	public static File ransacParameterFile = new File("ransac_parameters.csv");
+	
+	/**
+	 * This file must be a CSV with this format:<br/>
+	 * name_of_image_to_match, list_of_comma_separated_images_that_matches<br/>
+	 * For example:<br/>
+	 * <code>a-bear.jpg,test-a-bear.jpg,test2-a-bear.jpg</code><br/>
+	 * where <code>a-bear.jpg</code> is the name of the image to match, <code>test?-a-bear.jpg</code> are the images that
+	 * should match with a-bear.jpg<br/>
+	 */
+	public static File testSetFile = new File("test_set.csv");
+	
+	private int TP;    // True positive: image correctly matched
+	private int FP;    // False positive: image got from index but not correctly matched
+	private int TN;    // True negative: image correctly not matched
+	private int FN;    // False negative: indexed image but not matched
 	
 	private List<String> tnImages;
 	private List<String> tpImages;
@@ -47,19 +70,39 @@ public class Statistics {
 
 	private Map<String, List<String>> testset;
 	
-	public static final Path tnImg= FileSystems.getDefault().getPath("tnImages");
-	public static final Path tpImg= FileSystems.getDefault().getPath("tpImages");
+	public static Path tnImg= FileSystems.getDefault().getPath("tnImages");
+	public static Path tpImg= FileSystems.getDefault().getPath("tpImages");
 	
-	public static void main(String[] args) {
-		try{
-			System.out.println("Start statistics program");
+	/**
+	 * Start gathering statistics by using file names passed by parameters
+	 * @param fileNames A positional array that contains file names of each file needed:<br/>
+	 *                  fileNames[0] = file where statistics should stored<br/>
+	 *                  fileNames[1] = file where you can read different ransac parameters. The 
+	 *                  format of this file is explained into {@link Statistics#ransacParameterFile}<br/>
+	 *                  fileNames[2] = test set file, that is the file with the format explained on
+	 *                  {@link Statistics#testSetFile}<br/>
+	 *                  fileNames[3] = directory containing images to test that are in the index
+	 *                  (true positive images)<br/>
+	 *                  fileNames[4] = directory containing images to test that aren't in the index
+	 *                  (true negative images)
+	 */
+	public static void run (String[] fileNames, String indexName) {
+	    if (fileNames.length < 4) throw new IllegalArgumentException("fileNames is too short.");
+		try {
+		    outputFile = new File(fileNames[0]);
+		    ransacParameterFile = new File(fileNames[1]);
+		    testSetFile = new File(fileNames[2]);
+		    tpImg = FileSystems.getDefault().getPath(fileNames[3]);
+		    tnImg = FileSystems.getDefault().getPath(fileNames[4]);
+		    ESindexName = indexName;
+			System.out.println("Gathering statistics into " + outputFile.toString());
 			System.out.println("Read RANSAC parameters");
+			
 			// Read RANSAC algorithm parameters from file and put them into a list 
 			List<RansacParameters> parameters = new LinkedList<>();
 			BufferedReader parameterReader = new BufferedReader(new FileReader(ransacParameterFile));
 			String line = null; 
 			while ((line = parameterReader.readLine()) != null) {
-
 				if (!line.startsWith(COMMENT) && !line.contentEquals("")) {
 					String[] lineParameters = line.split(DELIMITER);
 					RansacParameters rp = new RansacParameters();
@@ -72,9 +115,9 @@ public class Statistics {
 			}
 			parameterReader.close();
 			
+			// Collect statistics by using different parameters for RANSAC algorithm
 			System.out.println("Calculating statistics");
 			Statistics statistics = new Statistics(); 
-			// Collect statistics by using different parameters for RANSAC algorithm
 			for (RansacParameters ransacParameters : parameters) {
 				statistics.setRansacParameter(ransacParameters);
 				statistics.computeConfusionMatrixValues();
@@ -82,7 +125,7 @@ public class Statistics {
 				float precision= statistics.computePrecision();
 				float recall= statistics.computeRecall();
 				float accuracy= statistics.computeAccuracy();
-				float fScore= (2 * recall * precision)/(recall+ precision);
+				float fScore= (2 * recall * precision)/(recall + precision);
 				
 				PrintWriter printFile = new PrintWriter(new BufferedWriter(new FileWriter(outputFile, true)));
 				printFile.printf("Run's Parameter:\n");
@@ -103,52 +146,47 @@ public class Statistics {
 				printFile.close();
 				statistics.resetStatstics();
 			}
-		} catch(ElasticsearchException e) {
+		}
+		catch (ElasticsearchException e) {
 			System.err.println("Elasticsearch Exception");
 			System.err.println(e.getMessage());
 			System.err.println(e.getDetailedMessage());
 			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
+		}
+		catch (IOException e) {
+		    System.err.println("Can't read file from disk");
+		    e.printStackTrace();
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 		System.out.println("End statistics program");
 	}
 	
-	public Statistics () {
+	public Statistics () throws IOException {
 		TP=0;
 		FP=0;
 		TN=0;
 		FN=0;
-		try {
-			initializeTrueNegativeImg();
-			initializeTruePostiveImg();
-			initTestSet();
-		} 
-		catch (IOException e) {
-			System.err.println("Can't read file from disk");
-			e.printStackTrace();
-			System.err.println("Exiting");
-			System.exit(1);
-		}
+		initializeTrueNegativeImg();
+		initializeTruePostiveImg();
+		initTestSet();
 	}
 	
 	public void resetStatstics () {
 		TP = TN = FP = FN = 0;
 	}
 	
-	public Statistics(RansacParameters ransacParameter) {
+	public Statistics (RansacParameters ransacParameter) throws IOException {
 		this();
 		this.ransacParameter=ransacParameter;
 	}
 	
-	public void setRansacParameter(RansacParameters ransacParameter) {
+	public void setRansacParameter (RansacParameters ransacParameter) {
 		this.ransacParameter = ransacParameter;
 	}
 	
-	private void initTestSet() throws IOException {
+	private void initTestSet () throws IOException {
 		testset = new HashMap<>();
 		BufferedReader testSetReader = new BufferedReader(new FileReader(testSetFile));
 		String line = null; 
@@ -165,17 +203,6 @@ public class Statistics {
 		testSetReader.close();
 	}
 	
-//	private List<String> selectRandomImages () throws FileNotFoundException, ClassNotFoundException, IOException{
-//		List<String> imgList = new SeqImageStorage().getImageNames();
-//
-//		List<String> randomList= new ArrayList<>(IMG_NUM);
-//		while(randomList.size()< IMG_NUM) {
-//			randomList.add(imgList.remove((int)(Math.random()*imgList.size())));
-//		}
-//
-//		return randomList;
-//	}
-
 	public void initializeTrueNegativeImg() throws IOException {
 		tnImages = initializeImgList(tnImg);
 	}
@@ -212,7 +239,8 @@ public class Statistics {
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
+			ElasticImgSearching elasticImgSearch= 
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, ESindexName);
 			try{
 				System.out.println("Searching for " + currTPImg);
 				bestMatch = elasticImgSearch.search(currTPImg, true);
@@ -224,7 +252,6 @@ public class Statistics {
 					bestMatch = splitPath[splitPath.length - 1];
 					splitPath = currTPImg.split(Pattern.quote(File.separator));
 					String currTPImgName = splitPath[splitPath.length - 1];
-					//elasticImgSearch.close();
 					
 					List<String> expectedImgs = testset.get(bestMatch); //search the name
 					if(expectedImgs == null) ++FP; //if null, not present
@@ -241,8 +268,9 @@ public class Statistics {
 
 		for(String currTNImg : tnImages) {
 			try{
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
-	            bestMatch=elasticImgSearch.search(currTNImg, true);
+			ElasticImgSearching elasticImgSearch=
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, ESindexName);
+	            bestMatch=elasticImgSearch.search(currTNImg);
 	            elasticImgSearch.close();
 				if(bestMatch == null) ++TN;
 				else ++FP;
@@ -256,9 +284,9 @@ public class Statistics {
 		String filepath = "";
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(testSetFile));
+			// For each file into the directory tpImg
 			for (Path dir : Files.newDirectoryStream(tpImg)) {
 				if(!dir.toString().endsWith(".DS_Store")) {
-					// For each file into the directory
 					filepath = dir.toString();
 					String[] splitPath = filepath.split(File.separator);
 					String filename = splitPath[splitPath.length - 1];
@@ -273,4 +301,9 @@ public class Statistics {
 
 		}
 	}
+	
+   public void setIndexName(String indexName) {
+        this.ESindexName = indexName;
+    }
+
 }

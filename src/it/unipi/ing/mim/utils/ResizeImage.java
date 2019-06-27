@@ -9,6 +9,11 @@ import it.unipi.ing.mim.main.Parameters;
 
 public class ResizeImage {
 
+	/**
+	 * resize an image using a scale factor that adapt the image to a maximum of {@link Parameters#MPX_PER_IMAGE} pixels per image
+	 * @param image
+	 * @return
+	 */
 	public static Mat resizeImage (Mat image) {
 		Mat resizedImage = new Mat();
 		int h = image.rows();

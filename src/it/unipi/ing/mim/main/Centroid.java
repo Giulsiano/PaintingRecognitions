@@ -13,6 +13,9 @@ public class Centroid implements Serializable{
 
 	private int id;
 
+	/**
+	 * initialize the centroid id and corrisponding coordinates
+	 */
 	public Centroid(Mat m, int id) {
 		if (m.rows() > 1) throw new IllegalArgumentException("Mat row is not a row");
 		FloatRawIndexer idx = m.createIndexer();

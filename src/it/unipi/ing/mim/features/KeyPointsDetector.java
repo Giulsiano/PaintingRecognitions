@@ -12,7 +12,7 @@ public class KeyPointsDetector {
 
 	public static final int SIFT_FEATURES = 1;
 	public static final int ORB_FEATURES = 2;
-	public static int MAX_FEATURE = 1000;
+	public static int MAX_FEATURE = Parameters.ORB_MAX_FEATURE;
 	
 	private Feature2D detector;
 	
@@ -31,11 +31,11 @@ public class KeyPointsDetector {
 
 		case ORB_FEATURES:
 			detector = ORB.create();
-			((ORB) detector).setMaxFeatures(Parameters.ORB_MAX_FEATURE);
+			((ORB) detector).setMaxFeatures(MAX_FEATURE);
 			break;
 
 		default:
-			throw new IllegalArgumentException("Feature extractor not recognized");
+			throw new IllegalArgumentException("Feature extractor not supported");
 		}
 	}
 

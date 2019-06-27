@@ -14,17 +14,28 @@ import org.bytedeco.opencv.opencv_core.Mat;
 import it.unipi.ing.mim.deep.tools.StreamManagement;
 import it.unipi.ing.mim.main.Parameters;
 
+/**
+ * Class used for computing posting lists and translate image features to text for indexing with 
+ * ElasticSearch
+ * @author Giuliano Peraz
+ * @author Valerio Tanferna
+ * @author Maria Taibi
+ *
+ */
 public class BOF {
 	private static String DELIMITER = " ";
 	public static final File POSTING_LIST_FILE =  Parameters.POSTING_LISTS_FILE;
 	
-	/**
-	 * compute the posting list for each image to index
-	 * @param labels
-	 * @param numClusters
-	 * @param keypointPerImage
-	 * @param imgIds
-	 * @throws IOException
+	 /** 
+	 * Compute the posting list of each image contained into imgIds list. It takes labels from
+	 * kmeans to compute the frequencies of each cluster. Each posting list is a pair (cluster id,
+	 * cluster frequencies) that is stored into disk into a file called {@link Parameters.POSTING_LISTS_FILE}
+	 * @param labels Mat containing cluster where that sample belongs to (sample is a feature of the image).
+	 * @param numClusters number of cluster get by kmeans algorithm
+	 * @param keypointPerImage Number of keypoint extracted from each image
+	 * @param imgIds Image name IDS, usually the path of the image
+	 * @throws IOException in case it is not possible to read an image or to store a posting list into
+	 * disk 
 	 */
 	@SuppressWarnings("unchecked")
 	public static void getPostingLists (Mat labels, int numClusters, List<Integer> keypointPerImage, List<String> imgIds) throws IOException{
@@ -32,6 +43,8 @@ public class BOF {
 		int start = 0;
 		int end = 0;
 		int i = 0;
+		int plCount = 0;
+		int totalImg = imgIds.size();
 		
 		// For each image compute the posting list associated to it, that is the list
 		// (image name, array of couple (clusterId, frequency of cluster)
@@ -55,6 +68,7 @@ public class BOF {
 					Comparator.reverseOrder()));
 
 			// Store posting list to disk
+			System.out.println("Posting list computed " + (++plCount) + "/" + totalImg);
 			SimpleEntry<String, SimpleEntry<Integer, Integer>[]> postingList =
 					new SimpleEntry<String, AbstractMap.SimpleEntry<Integer,Integer>[]>(imgId, clusterFrequencies);
 			StreamManagement.append(postingList, POSTING_LIST_FILE, SimpleEntry.class);
@@ -62,10 +76,19 @@ public class BOF {
 	}
 	
 	/**
-	 * generate the text representation for the image
-	 * @param imgPostingList
-	 * @param topK k-Nearest Neighbor pivots 
-	 * @return
+	 * Translate posting lists to text string that can be indexed by ElasticSearch. The output is like:<br/>
+	 * 0 0 0 0 0 0 0<br/>
+	 * 1 1 1 1 1 1<br/>
+	 * 2 2 2 2 2<br/>
+	 * 3 3 3 3 <br/>
+	 * 4 4 4<br/>
+	 * 5 5<br/>
+	 * 6
+	 * <br/>
+	 * where each number is the cluster ID with higher frequency starting from cluster 0
+	 * @param imgPostingList the posting list of the image
+	 * @param topK how many cluster to consider for indexing
+	 * @return the posting list ready to be indexed
 	 */
 	public static String features2Text(SimpleEntry<Integer, Integer>[] imgPostingList, int topK) {
 		StringBuilder sb = new StringBuilder();

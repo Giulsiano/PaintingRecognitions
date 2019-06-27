@@ -3,7 +3,6 @@ package it.unipi.ing.mim.utils;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -18,6 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.elasticsearch.ElasticsearchException;
 
@@ -44,15 +44,14 @@ public class Statistics {
 	private List<String> tnImages;
 	private List<String> tpImages;
 	private RansacParameters ransacParameter;
+
+	private Map<String, List<String>> testset;
 	
 	public static final Path tnImg= FileSystems.getDefault().getPath("tnImages");
 	public static final Path tpImg= FileSystems.getDefault().getPath("tpImages");
 	
 	public static void main(String[] args) {
 		try{
-			//System.out.println("Generating test_set.csv file");
-			//createCsvFile();
-			
 			System.out.println("Start statistics program");
 			System.out.println("Read RANSAC parameters");
 			// Read RANSAC algorithm parameters from file and put them into a list 
@@ -74,11 +73,10 @@ public class Statistics {
 			parameterReader.close();
 			
 			System.out.println("Calculating statistics");
+			Statistics statistics = new Statistics(); 
 			// Collect statistics by using different parameters for RANSAC algorithm
 			for (RansacParameters ransacParameters : parameters) {
-				Statistics statistics= new Statistics(ransacParameters);
-				statistics.initializeTrueNegativeImg();
-				statistics.initializeTruePostiveImg();
+				statistics.setRansacParameter(ransacParameters);
 				statistics.computeConfusionMatrixValues();
 				
 				float precision= statistics.computePrecision();
@@ -103,6 +101,7 @@ public class Statistics {
 				printFile.println();
 				printFile.println();
 				printFile.close();
+				statistics.resetStatstics();
 			}
 		} catch(ElasticsearchException e) {
 			System.err.println("Elasticsearch Exception");
@@ -118,16 +117,53 @@ public class Statistics {
 		System.out.println("End statistics program");
 	}
 	
-	public Statistics(RansacParameters ransacParameter) {
+	public Statistics () {
 		TP=0;
 		FP=0;
 		TN=0;
 		FN=0;
-		tnImages=new LinkedList<>();
-		tpImages=new LinkedList<>();
+		try {
+			initializeTrueNegativeImg();
+			initializeTruePostiveImg();
+			initTestSet();
+		} 
+		catch (IOException e) {
+			System.err.println("Can't read file from disk");
+			e.printStackTrace();
+			System.err.println("Exiting");
+			System.exit(1);
+		}
+	}
+	
+	public void resetStatstics () {
+		TP = TN = FP = FN = 0;
+	}
+	
+	public Statistics(RansacParameters ransacParameter) {
+		this();
 		this.ransacParameter=ransacParameter;
 	}
 	
+	public void setRansacParameter(RansacParameters ransacParameter) {
+		this.ransacParameter = ransacParameter;
+	}
+	
+	private void initTestSet() throws IOException {
+		testset = new HashMap<>();
+		BufferedReader testSetReader = new BufferedReader(new FileReader(testSetFile));
+		String line = null; 
+		System.out.println("Initializing test set from file " + testSetFile.toString());
+		while ((line = testSetReader.readLine()) != null) {
+				String[] lineName = line.split(DELIMITER);
+				List<String> matchImg = new ArrayList<String>(lineName.length-1);
+				Arrays.stream(Arrays.copyOfRange(lineName, 1, lineName.length))
+					  .forEach((imgName) -> {
+						  matchImg.add(imgName);
+					  });
+				testset.put(lineName[0], matchImg);
+		}
+		testSetReader.close();
+	}
 	
 //	private List<String> selectRandomImages () throws FileNotFoundException, ClassNotFoundException, IOException{
 //		List<String> imgList = new SeqImageStorage().getImageNames();
@@ -145,6 +181,7 @@ public class Statistics {
 	}
 	
 	private List<String> initializeImgList (Path imgDirectory) throws IOException {
+		System.out.println("Initializing image list from directory " + imgDirectory.toString());
 		List<String> imgList = new LinkedList<String>();
 		DirectoryStream<Path> imgDirectories = Files.newDirectoryStream(imgDirectory);
 		for (Path img : imgDirectories) {
@@ -171,54 +208,43 @@ public class Statistics {
 	}
 
 	public void computeConfusionMatrixValues() throws Exception {
-
-		Map<String, List<String>> testsetname = new HashMap<>();
-		BufferedReader testSetReader = new BufferedReader(new FileReader(testSetFile));
-		String line = null; 
-		while ((line = testSetReader.readLine()) != null) {
-				String[] lineName = line.split(DELIMITER);
-				List<String> matchImg = new ArrayList<String>(lineName.length-1);
-				Arrays.stream(Arrays.copyOfRange(lineName, 1, lineName.length))
-					  .forEach((imgName) -> {
-						  matchImg.add(imgName);
-					  });
-				testsetname.put(lineName[0], matchImg);
-		}
-		testSetReader.close();
 		
 		System.out.println("Generating Confusion matrix");
 		String bestMatch = null;
 		for(String currTPImg: tpImages) {
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
+			ElasticImgSearching elasticImgSearch= 
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, Parameters.INDEX_NAME);
 			try{
 				System.out.println("Searching for " + currTPImg);
-				bestMatch = elasticImgSearch.search(currTPImg, true);
+				bestMatch = elasticImgSearch.search(currTPImg);
 				elasticImgSearch.close();
 				if(bestMatch == null) ++FN;
 				else {
 					// In case there is a best match try to compare the last part of the image's path
-					String[] splitPath = bestMatch.split(File.separator);
+					String[] splitPath = bestMatch.split(Pattern.quote(File.separator));
 					bestMatch = splitPath[splitPath.length - 1];
-					splitPath = currTPImg.split(File.separator);
+					splitPath = currTPImg.split(Pattern.quote(File.separator));
 					String currTPImgName = splitPath[splitPath.length - 1];
 					//elasticImgSearch.close();
 					
-					List<String> expectedImgs = testsetname.get(bestMatch); //search the name
+					List<String> expectedImgs = testset.get(bestMatch); //search the name
 					if(expectedImgs == null) ++FP; //if null, not present
 					else if(expectedImgs.contains(currTPImgName)) //if not null search
 						++TP;
 					else ++FP;
-					
 				}
-			}catch(IllegalArgumentException e) {
+			}
+			catch (IllegalArgumentException e) {
 				System.err.println(e.getMessage());
 			}
+			System.out.println();
 		}
 
 		for(String currTNImg : tnImages) {
 			try{
-			ElasticImgSearching elasticImgSearch= new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY);
-	            bestMatch=elasticImgSearch.search(currTNImg, true);
+			ElasticImgSearching elasticImgSearch=
+			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, Parameters.INDEX_NAME);
+	            bestMatch=elasticImgSearch.search(currTNImg);
 	            elasticImgSearch.close();
 				if(bestMatch == null) ++TN;
 				else ++FP;

@@ -11,9 +11,12 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.HttpHost;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -61,18 +64,32 @@ public class ElasticImgSearching implements AutoCloseable {
 	private RestHighLevelClient client;
 	private int topKqry;
 	private List<Centroid> centroidList = null;
+	private String ESIndexName;
 	
 	private RansacParameters ransacParameters;
+	private Map<String, Object> bestGoodMatch;
 	
 	public ElasticImgSearching (int topKSearch) throws ClassNotFoundException, IOException {
-		this(new RansacParameters(), topKSearch);
+		this(new RansacParameters(), topKSearch, Parameters.INDEX_NAME);
 	}
 	
-	public ElasticImgSearching (RansacParameters parameters, int topKSearch) throws ClassNotFoundException, IOException {
+	public ElasticImgSearching (int topKSearch, String indexName) throws ClassNotFoundException, IOException {
+        this(new RansacParameters(), topKSearch, indexName);
+    }
+	
+	public ElasticImgSearching (RansacParameters parameters, int topKSearch, String indexName) {
 		ransacParameters = parameters;
 		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
 	    client = new RestHighLevelClient(builder);
-	    this.topKqry = topKSearch; 
+	    this.topKqry = topKSearch;
+	    this.ESIndexName = indexName;
+	    this.bestGoodMatch = new HashMap<>();
+	    this.bestGoodMatch.put("queryImg", null);
+	    this.bestGoodMatch.put("queryKeypoints", null);
+	    this.bestGoodMatch.put("image", null);
+	    this.bestGoodMatch.put("imageKeypoints", null);
+	    this.bestGoodMatch.put("matchVector", null);
+	    this.bestGoodMatch.put("homomography", null);
 	}
 	
 	/**
@@ -82,31 +99,37 @@ public class ElasticImgSearching implements AutoCloseable {
 	 * @return
 	 * @throws Exception
 	 */
-	public String search (String qryImage, boolean test) throws Exception {
-		if(!qryImage.endsWith("jpg")) throw new IllegalArgumentException("Image " + qryImage +" is not a .jpg file format");
+	public String search (String qryImageName) 
+	        throws ClassNotFoundException, ParseException, IOException, JsonException {
+		if(!qryImageName.toLowerCase().endsWith("jpg")) 
+		    throw new IllegalArgumentException("Image " + qryImageName + " is not a .jpg file format");
 		
-		// Read the image to search and extract its feature
-		MatConverter matConverter = new MatConverter();
-		
-		Mat queryImg = ResizeImage.resizeImage(imread(qryImage));
-		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.SIFT_FEATURES);
-		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
-		KeyPointVector keypoints = detector.detectKeypoints(queryImg);
-		Mat queryDesc = extractor.extractDescriptor(queryImg, keypoints);
+		// Read the image to be searched and extract its feature
+		Mat qryImg = imread(qryImageName);
+		Mat resizedQryImg = ResizeImage.resizeImage(qryImg);
+		System.out.println("Computing query features using SIFT");
+		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.SIFT_FEATURES);
+		Mat queryDesc = extractor.extractDescriptor(qryImg);
 		if (queryDesc.empty()) {
-			System.err.println("Query image is not a valid image for extracting features");
+			System.err.println("Can't extract features from " + qryImageName);
 			System.exit(1);
 		}
-		ImgDescriptor query = new ImgDescriptor(matConverter.mat2float(queryDesc), qryImage);
-
+		float[][] queryFeatures = getRandomFeatures(queryDesc);
+		ImgDescriptor query = new ImgDescriptor(queryFeatures, qryImageName);
+		
 		// Make the search by computing the bag of feature of the query
-		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry); 
+		System.out.println("Creating query feature-to-text");
+		String bofQuery = BOF.features2Text(computeClusterFrequencies(query), topKqry);
+		System.out.println("Ask ElasticSearch to return "  +  Parameters.KNN + " neighbours");
 		List<String> neighbours = search(bofQuery, Parameters.KNN);
 		
-		String bestGoodMatchName= computeBestGoodMatch(neighbours, queryImg, qryImage, test);
-		
-		if(bestGoodMatchName==null) {
-			System.err.println("No good matches found for " + qryImage);
+		// Compute the best good match if any
+		System.out.println("Computing best good match among neighbours");
+		String bestGoodMatchName= computeBestGoodMatch(neighbours, resizedQryImg);
+		if (bestGoodMatchName==null) System.err.println("No good matches found for " + qryImageName);
+		else {
+		    System.out.println("Match found: " + bestGoodMatchName);
+		    
 		}
 		return bestGoodMatchName;
 	}
@@ -125,25 +148,44 @@ public class ElasticImgSearching implements AutoCloseable {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
+	public float[][] getRandomFeatures (Mat features){
+		long descriptorRows = features.rows();
+		float[][] randomFeatures = null;
+		if (descriptorRows > 0) {
+			MatConverter matConverter = new MatConverter();
+			if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
+				randomFeatures = matConverter.mat2float(features);
+			}
+			else {
+				// Get unique random numbers from RNG
+				Set<Integer> randomRows = new HashSet<Integer>(Parameters.RANDOM_KEYPOINT_NUM);
+				long times = Parameters.RANDOM_KEYPOINT_NUM;
+				for (long i = 0; i < times; ++i) {
+					int randValue = (int) (Math.random() * descriptorRows);
+					if (!randomRows.add(randValue)) --i;
+				}
+				// Make the matrix of whole features by taking random rows from the feature matrix
+				Mat featMat = new Mat();
+				randomRows.forEach((randRow) -> featMat.push_back(features.row(randRow)));
+				randomFeatures = matConverter.mat2float(featMat);				
+			}
+		}
+		return randomFeatures;
+	}
+	
 	public List<String> search (String queryString, int k) throws ParseException, IOException, ClassNotFoundException{
 		List<String> res = new LinkedList<String>();
 
 		//call composeSearch to get SearchRequest object
 		SearchRequest searchReq= composeSearch(queryString, k);
 		
-		//perform elasticsearch search
-		Builder options = RequestOptions.DEFAULT.toBuilder();
-		options.setHttpAsyncResponseConsumerFactory(
-				new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(1000000000)
-				);
-		SearchResponse searchResponse = client.search(searchReq, options.build());
+		SearchResponse searchResponse = client.search(searchReq, RequestOptions.DEFAULT);//options.build());
 		client.close();
 		SearchHit[] hits = searchResponse.getHits().getHits();
 		res = new ArrayList<>(hits.length);	
 		for (int i = 0; i < hits.length; i++) {
 			Map<String, Object> metadata = hits[i].getSourceAsMap();
 			String id =  (String) metadata.get(Fields.ID);
-			System.out.println("img: " + id + "\n Score: " + hits[i].getScore() );
 			res.add(id);
 		}
 		return res;
@@ -156,7 +198,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		sb.query(queryBuild);
 		
 		// Build the request
-		SearchRequest searchRequest = new SearchRequest(Parameters.INDEX_NAME);
+		SearchRequest searchRequest = new SearchRequest(this.ESIndexName);
 		searchRequest.types("doc");
 		searchRequest.source(sb);
 		return searchRequest;
@@ -171,10 +213,11 @@ public class ElasticImgSearching implements AutoCloseable {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query) throws FileNotFoundException, ClassNotFoundException, IOException {
+	public SimpleEntry<Integer, Integer>[] computeClusterFrequencies (ImgDescriptor query)
+	        throws FileNotFoundException, ClassNotFoundException, IOException {
 		// Read centroids, compute distances of query to each of them
 		if (this.centroidList == null || this.centroidList.isEmpty()) {
-			this.centroidList =  (List<Centroid>) StreamManagement.load(Parameters.PIVOTS_FILE, List.class);
+			this.centroidList =  (List<Centroid>) StreamManagement.load(Parameters.CLUSTER_FILE, List.class);
 		}
 		Float[][] distancesFromCentroids = query.distancesTo(centroidList);
 		int[] qryLabel = new int[distancesFromCentroids.length];
@@ -182,8 +225,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		// Create the array containing the label of the cluster at which the feature is
 		// considered belong to
 		Arrays.fill(qryLabel, 0);
-		float minValue = Float.MAX_VALUE;
 		for (int i = 0; i < distancesFromCentroids.length; ++i) {
+			float minValue = Float.MAX_VALUE;
 			for (int j = 0; j < distancesFromCentroids[i].length; ++j) {
 				if (minValue > distancesFromCentroids[i][j]) {
 					minValue = distancesFromCentroids[i][j];
@@ -220,32 +263,31 @@ public class ElasticImgSearching implements AutoCloseable {
 	 * @throws IOException
 	 * @throws JsonException
 	 */
-	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg, String qryImage, boolean test) throws FileNotFoundException, IOException, JsonException {
-		
+	public String computeBestGoodMatch(List<String> neighbours, Mat queryImg) throws FileNotFoundException, IOException, JsonException {
 		FeaturesMatching matcher = new FeaturesMatching();
 		FeaturesMatchingFiltered filter = new FeaturesMatchingFiltered();
 		List<SimpleEntry<String, DMatchVector>> goodMatches = new LinkedList<>();
 		
-		// Compute ORB features for query
-		KeyPointsDetector detector = new KeyPointsDetector(KeyPointsDetector.ORB_FEATURES);
-		FeaturesExtraction extractor = new FeaturesExtraction(detector.getKeypointDetector());
-		KeyPointVector qryKeypoints = detector.detectKeypoints(queryImg);
-		Mat queryDesc = extractor.extractDescriptor(queryImg, qryKeypoints);
+		// Compute ORB features for query and save its keypoints to avoid loosing them
+		FeaturesExtraction extractor = new FeaturesExtraction(FeaturesExtraction.ORB_FEATURES);
+		Mat queryDesc = extractor.extractDescriptor(queryImg);
+		KeyPointVector qryKeypoints = extractor.getKeyPointVector();
 		
-		KeyPointVector keypoints= null;
-		
+		// Compute ORB features for each returned neighbour and try to match them against query
 		for (String neighbourName : neighbours) {
-			Mat img = ResizeImage.resizeImage(imread(neighbourName));
-			keypoints = detector.detectKeypoints(img);
-			Mat imgFeatures = extractor.extractDescriptor(img, keypoints);
-			DMatchVector matches = matcher.match(queryDesc, imgFeatures);
+			Mat neighbourDesc = extractor.extractDescriptor(imread(neighbourName));
+			if (neighbourDesc.empty()) {
+				System.err.println("Can't compute ORB features for " + neighbourName);
+				continue;
+			}
+			DMatchVector matches = matcher.match(queryDesc, neighbourDesc);
 			DMatchVector filteredMatches = filter.filterMatches(matches, ransacParameters.getDistanceThreshold());
 			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
  		}
-		
 		// Get the image with the best number of matches using RANSAC 
 		long maxInliers = 0;
 		Ransac ransac = new Ransac(ransacParameters);
+		Mat bestHomography = null;
 		Mat bestImg=null;
 		KeyPointVector bestKeypoints=null;
 		SimpleEntry<String, DMatchVector> bestGoodMatch = null;
@@ -253,35 +295,29 @@ public class ElasticImgSearching implements AutoCloseable {
 			DMatchVector matches = goodMatch.getValue();
 			if (matches.size() > 0) {
 				Mat img = ResizeImage.resizeImage(imread(goodMatch.getKey()));
-				keypoints = detector.detectKeypoints(img);
+				KeyPointVector keypoints = extractor.getDetector().detectKeypoints(img);
 				ransac.computeHomography(goodMatch.getValue(), qryKeypoints, keypoints);
 				int inliers = ransac.countNumInliers();
 				if (inliers > maxInliers) {
 					maxInliers = inliers;
 					bestGoodMatch = goodMatch;
+					bestHomography = ransac.getHomography();
 					bestImg= img;
 					bestKeypoints= keypoints;
 				}
 			}
 		}
+		// Put results into the map to retrieve information about best match
 		if (bestGoodMatch != null) {
-			if (test == false) {
-				JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch.getKey());
-				String qryImagePath = Parameters.BASE_URI + qryImage;
-				String bestMatchPath = Parameters.BASE_URI + bestGoodMatch.getKey();
-				Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-				
-				Mat imgMatches = new Mat();
-				drawMatches(  queryImg, qryKeypoints, bestImg , bestKeypoints, bestGoodMatch.getValue(), imgMatches);
-				ImageBox.imshow("RANSAC", imgMatches);
-				waitKey();
-				destroyAllWindows();
-			}
-			return bestGoodMatch.getKey();
+		    this.bestGoodMatch.put("queryImg", queryImg);
+	        this.bestGoodMatch.put("queryKeypoints", qryKeypoints);
+	        this.bestGoodMatch.put("image", bestImg);
+	        this.bestGoodMatch.put("imageKeypoints", bestKeypoints);
+	        this.bestGoodMatch.put("matchVector", bestGoodMatch.getValue());
+	        this.bestGoodMatch.put("homomography", bestHomography);
+	        return bestGoodMatch.getKey();
 		}
-		else {
-			return null;
-		}
+	    return null;
 	}
 
 	public RansacParameters getRansacParameters() {
@@ -290,5 +326,9 @@ public class ElasticImgSearching implements AutoCloseable {
 
 	public void setRansacParameters(RansacParameters ransacParameters) {
 		this.ransacParameters = ransacParameters;
+	}
+	
+	public Map<String, Object> getBestGoodMatch (){
+	    return bestGoodMatch;
 	}
 }

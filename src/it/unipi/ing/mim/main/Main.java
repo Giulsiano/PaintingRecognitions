@@ -14,6 +14,7 @@ import com.github.cliftonlabs.json_simple.JsonObject;
 
 import it.unipi.ing.mim.deep.tools.Output;
 import it.unipi.ing.mim.features.BoundingBox;
+import it.unipi.ing.mim.features.ImageBox;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgIndexing;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.utils.MetadataRetriever;
@@ -51,8 +52,7 @@ public class Main {
 				            DMatchVector matchVector = 
 				                    (DMatchVector) bestMatch.get("matchVector");
 				            drawMatches(queryImg, qryKeypoints, bestImg , bestKeyPoints, matchVector, imgMatches);
-				            //BoundingBox.addBoundingBox(imgMatches, queryImg, homomography, 0);// queryImg.cols());
-				            BoundingBox.imshow("RANSAC", imgMatches);
+				            ImageBox.imshow("RANSAC", imgMatches);
 				            waitKey();
 				            destroyAllWindows();
 				        }
@@ -63,6 +63,9 @@ public class Main {
 			                            new ElasticImgIndexing(Parameters.TOP_K_IDX, indexName);
 				        eii.indexAll(args[1]);
 				        eii.close();
+				        break;
+				        
+				    case "statistics":
 				        break;
 
 				    default:

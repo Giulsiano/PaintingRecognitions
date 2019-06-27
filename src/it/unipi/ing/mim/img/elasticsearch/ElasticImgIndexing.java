@@ -51,13 +51,7 @@ public class ElasticImgIndexing implements AutoCloseable {
 	private KmeansResults kmeansResults;
 
 	public ElasticImgIndexing(int topKIdx) throws IOException, ClassNotFoundException {
-<<<<<<< HEAD
 		this(topKIdx, Parameters.INDEX_NAME);
-=======
-		this.topKIdx = topKIdx;
-		RestClientBuilder builder = RestClient.builder(new HttpHost(HOST, PORT, PROTOCOL));
-		client = new RestHighLevelClient(builder);
->>>>>>> dddfc1f... Added comments
 	}
 	
 	public ElasticImgIndexing(int topKIdx, String indexName) throws IOException, ClassNotFoundException {
@@ -83,14 +77,9 @@ public class ElasticImgIndexing implements AutoCloseable {
 		File labelFile = Parameters.LABEL_FILE;
 		List<Centroid> centroidList = null;
 		try {
-<<<<<<< HEAD
 			// Loading them from file for saving time and memory
 		    System.out.println("Loading centroids");
 			centroidList = (List<Centroid>) StreamManagement.load(clusterFile, List.class);
-=======
-			// Loading centroids from file for saving time and memory
-			centroidList = (List<Centroid>) StreamManagement.load(pivotFile, List.class);
->>>>>>> dddfc1f... Added comments
 		}
 		catch (FileNotFoundException e) {
 			// Compute centroids and store them to the disk
@@ -217,10 +206,6 @@ public class ElasticImgIndexing implements AutoCloseable {
 		return client.indices().exists(requestdel, RequestOptions.DEFAULT);
 	}
 	
-<<<<<<< HEAD
-=======
-	
->>>>>>> dddfc1f... Added comments
 	public void createIndex() throws IOException, ConnectException {
 		try {
 			// If the index already exists delete it, then rebuild it

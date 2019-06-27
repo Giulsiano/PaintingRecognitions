@@ -51,7 +51,7 @@ public class Output {
 		
 		try {
 	        string2File(html, outFile);
-			System.out.println("html generated");
+			System.out.print("html generated");
         } catch (IOException e) {
 	        e.printStackTrace();
         }

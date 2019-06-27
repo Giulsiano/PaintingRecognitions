@@ -90,7 +90,7 @@ public class ElasticImgSearching implements AutoCloseable {
 	 */
 	public String search (String qryImageName) 
 	        throws ClassNotFoundException, ParseException, IOException, JsonException {
-		if(!qryImageName.toLowerCase().endsWith("jpg")) 
+		if (!qryImageName.toLowerCase().endsWith("jpg")) 
 		    throw new IllegalArgumentException("Image " + qryImageName + " is not a .jpg file format");
 		
 		// Read the image to be searched and extract its feature
@@ -132,9 +132,8 @@ public class ElasticImgSearching implements AutoCloseable {
 		long descriptorRows = features.rows();
 		float[][] randomFeatures = null;
 		if (descriptorRows > 0) {
-			MatConverter matConverter = new MatConverter();
 			if (descriptorRows <= Parameters.RANDOM_KEYPOINT_NUM) {
-				randomFeatures = matConverter.mat2float(features);
+				randomFeatures = MatConverter.mat2float(features);
 			}
 			else {
 				// Get unique random numbers from RNG
@@ -147,7 +146,7 @@ public class ElasticImgSearching implements AutoCloseable {
 				// Make the matrix of whole features by taking random rows from the feature matrix
 				Mat featMat = new Mat();
 				randomRows.forEach((randRow) -> featMat.push_back(features.row(randRow)));
-				randomFeatures = matConverter.mat2float(featMat);				
+				randomFeatures = MatConverter.mat2float(featMat);				
 			}
 		}
 		return randomFeatures;
@@ -273,10 +272,11 @@ public class ElasticImgSearching implements AutoCloseable {
 			}
 			DMatchVector matches = matcher.match(queryDesc, neighbourDesc);
 			DMatchVector filteredMatches = filter.filterMatches(matches, ransacParameters.getDistanceThreshold());
-			goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
+			if (!filteredMatches.empty())
+			    goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
  		}
 		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
-		long maxInliers = 0;
+		long maxInliers = ransacParameters.getMinRansacInliers();
 		Ransac ransac = new Ransac(ransacParameters);
 		Mat bestImg=null;
 		KeyPointVector bestKeypoints=null;

@@ -84,7 +84,6 @@ public class Main {
 				        break;
 				}
 				System.out.println("Program ended");
-				System.exit(0);
 			} 
 			catch (Exception e) {
 				System.err.println("Program generated an exception: " + e.getClass().getName() 

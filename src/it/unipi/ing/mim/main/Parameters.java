@@ -33,7 +33,7 @@ public class Parameters {
 		
 	// Algorithm parameters
 	public static final int MAX_DISTANCE_THRESHOLD = 34; // from 25 to 50
-	public static final Integer NUM_KMEANS_CLUSTER = 200;	// TODO Ricorda di cambiarlo
+	public static final Integer NUM_KMEANS_CLUSTER = 10000; // TODO Ricorda di cambiarlo
 	public static final int MIN_RANSAC_INLIERS = 12;
 	public static final int MIN_GOOD_MATCHES = 15;
 	public static final double RANSAC_PX_THRESHOLD = 1.0;

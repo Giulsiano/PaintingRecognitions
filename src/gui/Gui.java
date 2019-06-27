@@ -44,13 +44,25 @@ public class Gui extends Application{
 	String absoluteImagePath = "";
 	String absoluteImageFile = "";
 	it.unipi.ing.mim.main.Parameters mypar = new it.unipi.ing.mim.main.Parameters();
-	String background_color = "#00517c";
+	String background_color = "#02517d";
+	String background_color2 = "#005180";
+	String border = "#8ac44a";
+	String background_color3 = "white";
+	String text_color2 = "#02517d";
 	String text_color = "white";
-	String style = " -fx-background-color: " + background_color + 
+	String style = " -fx-background-color: " + background_color3 + 
+			"; -fx-text-fill: " + text_color2 +
+			"; -fx-font-weight: bold " +
+			"; -fx-font-size: 15pt;";
+	String style2 = " -fx-background-color: " + background_color + 
+			"; -fx-text-fill: " + text_color +
+			"; -fx-font-weight: bold " +
+			"; -fx-font-size: 15pt" +
+			"; -fx-border-color: #8ac44a;";
+	String style3 = " -fx-background-color: " + background_color + 
 			"; -fx-text-fill: " + text_color +
 			"; -fx-font-weight: bold " +
 			"; -fx-font-size: 15pt;";
-	
 	
 	/**
 	 * Launch the application.
@@ -74,19 +86,19 @@ public class Gui extends Application{
 		srcbtn.setStyle(style);
 
 		TextField indexname = new TextField();
-		indexname.setText("index_name");
+		indexname.setText("Enter_index_name");
 		indexname.setAlignment(Pos.CENTER);
-		indexname.setStyle(style);
+		indexname.setStyle(style2);
 		
 		TextField pathname = new TextField();
 		pathname.setText("Select path to index");
 		pathname.setAlignment(Pos.CENTER);
-		pathname.setStyle(style);
+		pathname.setStyle(style2);
 		
 		TextField filename = new TextField();
 		filename.setText("Select file to search");
 		filename.setAlignment(Pos.CENTER);
-		filename.setStyle(style);
+		filename.setStyle(style2);
 		
 		
         indbtn.setOnAction(new EventHandler<ActionEvent>() {
@@ -138,14 +150,14 @@ public class Gui extends Application{
         //#8bc34a
         Label l = new Label("Do you want see the result image?");
         
-        l.setStyle(style);
+        l.setStyle(style3);
         //l.setPrefHeight(50);
         
         ToggleGroup group = new ToggleGroup();
         RadioButton rbyes = new RadioButton("yes");
         RadioButton rbno = new RadioButton("no");
-        rbyes.setStyle(style);
-        rbno.setStyle(style);
+        rbyes.setStyle(style3);
+        rbno.setStyle(style3);
         rbyes.setUserData("yes");
         rbno.setUserData("no");
         rbyes.setToggleGroup(group);
@@ -205,7 +217,7 @@ public class Gui extends Application{
 //        }
 //        
         
-        root.setGridLinesVisible(true);
+        //root.setGridLinesVisible(true);
 
         primaryStage.setTitle("Painting Recognition");
         primaryStage.setScene(scene);

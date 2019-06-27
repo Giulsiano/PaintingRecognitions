@@ -13,11 +13,11 @@ import org.bytedeco.opencv.opencv_core.Mat;
 import com.github.cliftonlabs.json_simple.JsonObject;
 
 import it.unipi.ing.mim.deep.tools.Output;
-import it.unipi.ing.mim.features.BoundingBox;
 import it.unipi.ing.mim.features.ImageBox;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgIndexing;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.utils.MetadataRetriever;
+import it.unipi.ing.mim.utils.Statistics;
 
 public class Main {
 	private static boolean showMatchWindow = false;
@@ -66,6 +66,17 @@ public class Main {
 				        break;
 				        
 				    case "statistics":
+				        if (args.length < 5 && !("-tp".equals(args[1]) && "-tn".equals(args[3]))) 
+				            printHelp();
+				        else {
+				            String[] fileNames = {"statistic.txt", 
+				                                  "ransac_parameters.csv", 
+				                                  "test_set.csv",
+				                                  args[2],
+				                                  args[4]
+		                                          };
+				            Statistics.run(fileNames, indexName);
+				        }
 				        break;
 
 				    default:
@@ -95,7 +106,7 @@ public class Main {
 		System.out.println("\t\tStart indexing each image into dir");
 		System.out.println("\t\tOptionally you can tell the program");
 		System.out.println("\t\tto index objects using index_name");
-		System.out.println("\t\tinstead of default one (" + Parameters.INDEX_NAME +").");
+		System.out.println("\t\tinstead of default one (" + Parameters.INDEX_NAME +")");
 		System.out.println("\t\tdir must contain subdirectories that");
 		System.out.println("\t\tcontains images to index");
 		System.out.println();

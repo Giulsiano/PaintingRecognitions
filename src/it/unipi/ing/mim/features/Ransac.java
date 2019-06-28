@@ -32,7 +32,7 @@ public class Ransac {
 
 		Mat obj = new Mat((int) goodMatches.size(), 1, CV_32FC2);
 		Mat scene = new Mat((int) goodMatches.size(), 1, CV_32FC2);
-		this.inliers = new Mat((int) parameters.getMinRansacInliers(), 1, CV_8UC1);
+		this.inliers = new Mat((int) goodMatches.size(), 1, CV_8UC1);
 
 		FloatIndexer ptObjIdx = obj.createIndexer();
 		FloatIndexer ptSceneIdx = scene.createIndexer();
@@ -43,7 +43,7 @@ public class Ransac {
 			Point2f p2 = keypointsScene.get(goodMatches.get(i).trainIdx()).pt(); 
 			ptSceneIdx.put(i, p2.x(), p2.y());
 		}
-		homography = findHomography(scene, obj, inliers, RANSAC, parameters.getRansacPixelThreshold());
+		homography = findHomography(obj, scene, inliers, RANSAC, parameters.getRansacPixelThreshold());
 	}
 
 

@@ -276,7 +276,7 @@ public class ElasticImgSearching implements AutoCloseable {
 			    goodMatches.add(new SimpleEntry<String, DMatchVector>(neighbourName, filteredMatches));
  		}
 		// Get the image with the best number of matches using RANSAC (RANdom SAmple Consensus)
-		long maxInliers = ransacParameters.getMinRansacInliers();
+		long minInliers = (ransacParameters.getMinRansacInliers()-1);
 		Ransac ransac = new Ransac(ransacParameters);
 		Mat bestImg=null;
 		KeyPointVector bestKeypoints=null;
@@ -288,8 +288,8 @@ public class ElasticImgSearching implements AutoCloseable {
 				KeyPointVector keypoints = extractor.getDetector().detectKeypoints(img);
 				ransac.computeHomography(goodMatch.getValue(), qryKeypoints, keypoints);
 				int inliers = ransac.countNumInliers();
-				if (inliers > maxInliers) {
-					maxInliers = inliers;
+				if (inliers > minInliers) {
+					minInliers = inliers;
 					bestGoodMatch = goodMatch;
 					bestImg= img;
 					bestKeypoints= keypoints;

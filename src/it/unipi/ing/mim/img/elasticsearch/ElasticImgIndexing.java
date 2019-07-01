@@ -107,15 +107,13 @@ public class ElasticImgIndexing implements AutoCloseable {
 			BOF.getPostingLists(labels, centroidList.size(), indexing.getKeypointPerImage(), 
 					indexing.getImageNames());
 		}
-		else {
 		    // Put images to the index
-		    System.out.println("Start indexing");
-		    this.createIndex();
-		    this.index();
-		    this.close();
-		    System.out.println("End indexing");
-		}
-	}
+	    System.out.println("Start indexing");
+	    this.createIndex();
+	    this.index();
+	    this.close();
+	    System.out.println("End indexing");
+}
 	
 	private List<Centroid> computeClusterCentres (File descFile) throws Exception{
 		System.out.println("Computing clusters for the dataset");

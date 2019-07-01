@@ -1,10 +1,8 @@
 package gui;
 
+import java.awt.Desktop;
 import java.io.File;
-
-import javax.swing.JScrollPane;
-
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Parameter;
+import java.io.IOException;
 
 import it.unipi.ing.mim.main.Main;
 import javafx.application.Application;
@@ -14,10 +12,8 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
@@ -31,14 +27,13 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 public class Gui extends Application{
-	
+
 	double buttonh = 30;
 	double buttonw = 200;
 	int areaw = 20;
@@ -65,7 +60,7 @@ public class Gui extends Application{
 			"; -fx-text-fill: " + text_color +
 			"; -fx-font-weight: bold " +
 			"; -fx-font-size: 15pt;";
-	
+
 	/**
 	 * Launch the application.
 	 */
@@ -91,139 +86,168 @@ public class Gui extends Application{
 		indexname.setText("enter index name");
 		indexname.setAlignment(Pos.CENTER);
 		indexname.setStyle(style2);
-		
+
 		TextField pathname = new TextField();
 		pathname.setText("Select path to index");
 		pathname.setAlignment(Pos.CENTER);
 		pathname.setStyle(style2);
-		
+
 		TextField filename = new TextField();
 		filename.setText("Select file to search");
 		filename.setAlignment(Pos.CENTER);
 		filename.setStyle(style2);
-		
-		
-        indbtn.setOnAction(new EventHandler<ActionEvent>() {
- 
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Puppa forte World!");
-                //selectpath(primaryStage);
-                
-                if(!absoluteImagePath.equals("")) {
-                	Main.main(new String[]{"index", absoluteImagePath,"-i", indexname.getText().contentEquals("enter index name")? mypar.INDEX_NAME : indexname.getText()});
+
+		Button outputBut = new Button();
+		outputBut.setText("Show the search result");
+		outputBut.setStyle(style);
+
+		indbtn.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				System.out.println("Puppa forte World!");
+				//selectpath(primaryStage);
+
+				if(!absoluteImagePath.equals("")) {
+					Main.main(new String[]{"index", absoluteImagePath,"-i", indexname.getText()});
 				}
-            }
-        });
-        
-        srcbtn.setOnAction(new EventHandler<ActionEvent>() {
- 
-            @Override
-            public void handle(ActionEvent event) {
-            	System.out.println("Search button pressed");
+			}
+		});
+
+
+		indexname.setOnMousePressed(EventHandler -> {
+			//System.out.println("plutto ");
+			//selectpath(primaryStage);
+			//indexname.setText("");
+		});
+
+		pathname.setOnMousePressed(EventHandler -> {
+			System.out.println("pippa ");
+			selectpath(primaryStage);
+			if(!absoluteImagePath.equals(""))
+				pathname.setText(absoluteImagePath);
+		});
+
+		filename.setOnMousePressed(EventHandler -> {
+			System.out.println("pippa ");
+			selectfile(primaryStage);
+			if(!absoluteImageFile.equals(""))
+				filename.setText(absoluteImageFile);
+		});
+
+		outputBut.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event){
+				System.out.println("outputPressed");
+				String url="./"+(it.unipi.ing.mim.main.Parameters.RESULTS_HTML).toString();
+				try {
+					Desktop.getDesktop().open(new File(url));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			});
+
+
+		//#8bc34a
+		Label l = new Label("Do you want see the result image?");
+
+		l.setStyle(style3);
+		//l.setPrefHeight(50);
+
+		ToggleGroup group = new ToggleGroup();
+		RadioButton rbyes = new RadioButton("yes");
+		RadioButton rbno = new RadioButton("no");
+		rbyes.setStyle(style3);
+		rbno.setStyle(style3);
+		rbyes.setUserData("yes");
+		rbno.setUserData("no");
+		rbyes.setToggleGroup(group);
+		rbno.setToggleGroup(group);
+		rbyes.setSelected(false);
+		rbno.setSelected(true);
+
+		group.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
+			public void changed(ObservableValue<? extends Toggle> ov,
+					Toggle old_toggle, Toggle new_toggle) {
+				if(group.getSelectedToggle() !=null) {
+					if(group.getSelectedToggle().getUserData().toString().equals("yes")) {
+						Main.showMatchWindow = true;
+					}
+					else Main.showMatchWindow = false;
+				}
+			}
+
+		});
+
+
+		Pane pane = new Pane();
+		GridPane root = new GridPane();
+		root.setMaxSize(500, 500);
+		root.setPrefSize(500, 500);
+		Scene scene = new Scene(root, 966, 652);//, Color.CHOCOLATE); //Color. ... does not work TODO
+		primaryStage.setScene(scene);
+		primaryStage.setResizable(false);
+		Image img = new Image(new File("./src/gui/background.png").toURI().toString());
+		BackgroundImage bgi = new BackgroundImage(
+				img, 
+				BackgroundRepeat.NO_REPEAT, 
+				BackgroundRepeat.NO_REPEAT, 
+				BackgroundPosition.DEFAULT, 
+				new BackgroundSize(BackgroundSize.AUTO,BackgroundSize.AUTO, false, false, true, false));
+		root.setBackground(new Background(bgi));
+		root.setPrefSize(50, 50);
+		root.setAlignment(Pos.CENTER);
+		root.setHgap(10);
+		root.setVgap(10);
+		root.setPadding(new Insets(25, 25, 25, 25));
+
+		root.add(indexname, 0, 0);
+		root.add(pathname, 0, 1);
+		root.add(indbtn, 1, 1);
+		root.add(filename, 0, 2);
+		root.add(srcbtn, 1, 2);
+		root.add(l, 0, 3);
+		root.add(rbyes, 0, 4);
+		root.add(rbno, 1, 4);
+		//        for(Node i: root.getChildren()) {
+		//        	if(i instanceof Control) {
+		//        		Control control = (Control) i;
+		//        		control.setStyle(" -fx-background-color: "+ background_color+";");
+		//        		//control.setStyle(" -fx-border-color: #00517c;");
+		//        		//control.setStyle(" -fx-text-fill: #ffffff;"); //TODO NON FUNZIONSDJBHLFBHJAFGBHJADGHBJFG
+		//        	}
+		//        }
+		//        
+
+		//root.setGridLinesVisible(true);
+
+
+		srcbtn.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				System.out.println("Search button pressed");
 				//selectfile(primaryStage);
-				
+
 				if(!absoluteImageFile.equals("")) {
-					Main.main(new String[]{"search", absoluteImageFile,"-i", indexname.getText().contentEquals("enter index name")? mypar.INDEX_NAME : indexname.getText()});
+					Main.main(new String[]{"search", absoluteImageFile,"-i", indexname.getText()});
+					if(Main.bestMatchFound()) {
+						root.getChildren().remove(outputBut);
+						root.add(outputBut, 0, 6);
+					}
+					else
+					{
+						root.getChildren().remove(outputBut);
+					}
 				}
-            }
-        });
-                
-        indexname.setOnMousePressed(EventHandler -> {
-    	    //System.out.println("plutto ");
-            //selectpath(primaryStage);
-    	    //indexname.setText("");
-        });
-        
-        pathname.setOnMousePressed(EventHandler -> {
-    	    System.out.println("pippa ");
-            selectpath(primaryStage);
-            if(!absoluteImagePath.equals(""))
-            	pathname.setText(absoluteImagePath);
-        });
-        
-        filename.setOnMousePressed(EventHandler -> {
-    	    System.out.println("pippa ");
-            selectfile(primaryStage);
-            if(!absoluteImageFile.equals(""))
-            	filename.setText(absoluteImageFile);
-        });
+			}
+		});
 
-        //#8bc34a
-        Label l = new Label("Do you want see the result image?");
-        
-        l.setStyle(style3);
-        //l.setPrefHeight(50);
-        
-        ToggleGroup group = new ToggleGroup();
-        RadioButton rbyes = new RadioButton("yes");
-        RadioButton rbno = new RadioButton("no");
-        rbyes.setStyle(style3);
-        rbno.setStyle(style3);
-        rbyes.setUserData("yes");
-        rbno.setUserData("no");
-        rbyes.setToggleGroup(group);
-        rbno.setToggleGroup(group);
-        rbyes.setSelected(false);
-        rbno.setSelected(true);
-        
-        group.selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
-        	public void changed(ObservableValue<? extends Toggle> ov,
-        			Toggle old_toggle, Toggle new_toggle) {
-        		if(group.getSelectedToggle() !=null) {
-        			if(group.getSelectedToggle().getUserData().toString().equals("yes")) {
-        				Main.showMatchWindow = true;
-        			}
-        			else Main.showMatchWindow = false;
-        		}
-        	}
-        
-        });
-        
-        Pane pane = new Pane();
-        GridPane root = new GridPane();
-        root.setMaxSize(500, 500);
-        root.setPrefSize(500, 500);
-        Scene scene = new Scene(root, 966, 652);//, Color.CHOCOLATE); //Color. ... does not work TODO
-        primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
-        Image img = new Image(new File("./src/gui/background.png").toURI().toString());
-        BackgroundImage bgi = new BackgroundImage(
-        		img, 
-        		BackgroundRepeat.NO_REPEAT, 
-        		BackgroundRepeat.NO_REPEAT, 
-        		BackgroundPosition.DEFAULT, 
-        		new BackgroundSize(BackgroundSize.AUTO,BackgroundSize.AUTO, false, false, true, false));
-        root.setBackground(new Background(bgi));
-        //root.setPrefSize(50, 50);
-        root.setAlignment(Pos.CENTER);
-        root.setHgap(10);
-        root.setVgap(10);
-        root.setPadding(new Insets(25, 25, 25, 25));
-        
-        root.add(indexname, 0, 0);
-        root.add(pathname, 0, 1);
-        root.add(indbtn, 1, 1);
-        root.add(filename, 0, 2);
-        root.add(srcbtn, 1, 2);
-        root.add(l, 0, 3);
-        root.add(rbyes, 0, 4);
-        root.add(rbno, 1, 4);
-//        for(Node i: root.getChildren()) {
-//        	if(i instanceof Control) {
-//        		Control control = (Control) i;
-//        		control.setStyle(" -fx-background-color: "+ background_color+";");
-//        		//control.setStyle(" -fx-border-color: #00517c;");
-//        		//control.setStyle(" -fx-text-fill: #ffffff;"); //TODO NON FUNZIONSDJBHLFBHJAFGBHJADGHBJFG
-//        	}
-//        }
-//        
-        
-        //root.setGridLinesVisible(true);
-
-        primaryStage.setTitle("Painting Recognition");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+		primaryStage.setTitle("Painting Recognition");
+		primaryStage.setScene(scene);
+		primaryStage.show();
 	}
 
 	private void selectfile(Stage primaryStage) {
@@ -243,12 +267,12 @@ public class Gui extends Application{
 		DirectoryChooser directoryChooser = new DirectoryChooser();
 		directoryChooser.setTitle("Open Resource Path");
 		File selectedDirectory = directoryChooser.showDialog(primaryStage);
-		
+
 		if (selectedDirectory != null) {
 			absoluteImagePath = selectedDirectory.getAbsolutePath();
 		}
 	}
-	
+
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		// TODO Auto-generated method stub

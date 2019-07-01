@@ -1,20 +1,10 @@
 package it.unipi.ing.mim.main;
 
-import static org.bytedeco.opencv.global.opencv_features2d.drawMatches;
-import static org.bytedeco.opencv.global.opencv_highgui.destroyAllWindows;
-import static org.bytedeco.opencv.global.opencv_highgui.waitKey;
-
 import java.io.File;
-import java.util.Map;
-
-import org.bytedeco.opencv.opencv_core.DMatchVector;
-import org.bytedeco.opencv.opencv_core.KeyPointVector;
-import org.bytedeco.opencv.opencv_core.Mat;
 
 import com.github.cliftonlabs.json_simple.JsonObject;
 
 import it.unipi.ing.mim.deep.tools.Output;
-import it.unipi.ing.mim.features.ImageBox;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgIndexing;
 import it.unipi.ing.mim.img.elasticsearch.ElasticImgSearching;
 import it.unipi.ing.mim.utils.MetadataRetriever;
@@ -22,6 +12,7 @@ import it.unipi.ing.mim.utils.Statistics;
 
 public class Main {
 	public static boolean showMatchWindow = false;
+	private static boolean bestMatchFound = false;
 	
 	public static void main(String[] args) {
 		if (args.length < 2) printHelp();
@@ -37,26 +28,14 @@ public class Main {
 				        eis.close();
 				        
 				        if (bestGoodMatch != null) {
+				        	bestMatchFound=true;
 				            JsonObject metadata = MetadataRetriever.readJsonFile(bestGoodMatch);
 			                String qryImagePath = new File(args[1]).toURI().toString();
 			                String bestMatchPath = new File(bestGoodMatch).toURI().toString();
 			                Output.toHTML(metadata, qryImagePath, bestMatchPath, Parameters.RESULTS_HTML);
-			                if (showMatchWindow) {
-			                    Mat imgMatches = new Mat();
-			                    Map<String, Object> bestMatch = eis.getBestGoodMatch();
-			                    Mat queryImg = (Mat) bestMatch.get("queryImg");
-			                    KeyPointVector qryKeypoints = 
-			                            (KeyPointVector) bestMatch.get("queryKeypoints");
-			                    Mat bestImg = (Mat) bestMatch.get("image");
-			                    KeyPointVector bestKeyPoints = 
-			                            (KeyPointVector) bestMatch.get("imageKeypoints");
-			                    DMatchVector matchVector = 
-			                            (DMatchVector) bestMatch.get("matchVector");
-			                    drawMatches(queryImg, qryKeypoints, bestImg , bestKeyPoints, matchVector, imgMatches);
-			                    ImageBox.imshow("RANSAC", imgMatches);
-			                    waitKey();
-			                    destroyAllWindows();
-			                }
+				        }
+				        else {
+				        	bestMatchFound=false;
 				        }
 				        break;
 
@@ -124,4 +103,9 @@ public class Main {
 	public static void test() {
 		System.out.println("INDEXING FROM GUI");
 	}
+
+	public static boolean bestMatchFound() {
+		return bestMatchFound;
+	}
+	
 }

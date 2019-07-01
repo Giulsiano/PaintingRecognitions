@@ -243,7 +243,7 @@ public class Statistics {
 			        new ElasticImgSearching(this.ransacParameter, Parameters.TOP_K_QUERY, ESindexName);
 			try{
 				System.out.println("Searching for " + currTPImg);
-				bestMatch = elasticImgSearch.search(currTPImg, true);
+				bestMatch = elasticImgSearch.search(currTPImg);
 				elasticImgSearch.close();
 				if(bestMatch == null) ++FN;
 				else {

@@ -10,35 +10,35 @@ public class RansacParameters {
 		return DISTANCE_THRESHOLD;
 	}
 	
-	public void setDistanceThreshold (int dISTANCE_THRESHOLD) {
-		if (dISTANCE_THRESHOLD < 25)  DISTANCE_THRESHOLD = 25;
-		else if (dISTANCE_THRESHOLD > 50) DISTANCE_THRESHOLD = 50;
-		else DISTANCE_THRESHOLD = dISTANCE_THRESHOLD;
+	public void setDistanceThreshold (int distanceThreshold) {
+		if (distanceThreshold < 25)  DISTANCE_THRESHOLD = 25;
+		else if (distanceThreshold > 50) DISTANCE_THRESHOLD = 50;
+		else DISTANCE_THRESHOLD = distanceThreshold;
 	}
 	
 	public int getMinRansacInliers () {
 		return MIN_RANSAC_INLIERS;
 	}
 	
-	public void setMinRansacInliers (int mIN_RANSAC_INLIERS) {
-		MIN_RANSAC_INLIERS = mIN_RANSAC_INLIERS;
+	public void setMinRansacInliers (int minRansacInliers) {
+		MIN_RANSAC_INLIERS = minRansacInliers;
 	}
 	
 	public int getMinGoodMatches () {
 		return MIN_GOOD_MATCHES;
 	}
 	
-	public void setMinGoodMatches (int mIN_GOOD_MATCHES) {
-		MIN_GOOD_MATCHES = mIN_GOOD_MATCHES;
+	public void setMinGoodMatches (int minGoodMatches) {
+		MIN_GOOD_MATCHES = minGoodMatches;
 	}
 	
 	public double getRansacPixelThreshold () {
 		return RANSAC_PX_THRESHOLD;
 	}
 	
-	public void setRansacPixelThreshold (double rANSAC_PX_THRESHOLD) {
-		if (rANSAC_PX_THRESHOLD < 1.0f) RANSAC_PX_THRESHOLD = 1.0f;
-		if (rANSAC_PX_THRESHOLD > 3.0f) RANSAC_PX_THRESHOLD = 3.0f;
-		else RANSAC_PX_THRESHOLD = rANSAC_PX_THRESHOLD;
+	public void setRansacPixelThreshold (double ransacPxThreshold) {
+		if (ransacPxThreshold < 1.0f) RANSAC_PX_THRESHOLD = 1.0f;
+		if (ransacPxThreshold > 3.0f) RANSAC_PX_THRESHOLD = 3.0f;
+		else RANSAC_PX_THRESHOLD = ransacPxThreshold;
 	}
 }

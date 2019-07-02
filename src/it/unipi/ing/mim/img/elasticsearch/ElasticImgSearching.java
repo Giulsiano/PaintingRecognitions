@@ -101,7 +101,7 @@ public class ElasticImgSearching implements AutoCloseable {
 		Mat queryDesc = extractor.extractDescriptor(qryImg);
 		if (queryDesc.empty()) {
 			System.err.println("Can't extract features from " + qryImageName);
-			System.exit(1);
+			return null;
 		}
 		float[][] queryFeatures = getRandomFeatures(queryDesc);
 		ImgDescriptor query = new ImgDescriptor(queryFeatures, qryImageName);

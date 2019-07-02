@@ -46,6 +46,8 @@ public class Gui extends Application{
 	String background_color3 = "white";
 	String text_color2 = "#02517d";
 	String text_color = "white";
+	String text_color_l = "red";
+	
 	String style = " -fx-background-color: " + background_color3 + 
 			"; -fx-text-fill: " + text_color2 +
 			"; -fx-font-weight: bold " +
@@ -56,7 +58,7 @@ public class Gui extends Application{
 			"; -fx-font-size: 15pt" +
 			"; -fx-border-color: #8ac44a;";
 	String style3 = " -fx-background-color: " + background_color + 
-			"; -fx-text-fill: " + text_color +
+			"; -fx-text-fill: " + text_color_l +
 			"; -fx-font-weight: bold " +
 			"; -fx-font-size: 15pt;";
 
@@ -151,12 +153,12 @@ public class Gui extends Application{
 
 
 		//#8bc34a
-		Label l = new Label("Do you want see the result image?");
+		Label l = new Label("Ooopss...Image not found :(");
 
 		l.setStyle(style3);
-		//l.setPrefHeight(50);
+		l.setPrefHeight(50);
 
-		ToggleGroup group = new ToggleGroup();
+		/*ToggleGroup group = new ToggleGroup();
 		RadioButton rbyes = new RadioButton("yes");
 		RadioButton rbno = new RadioButton("no");
 		rbyes.setStyle(style3);
@@ -179,7 +181,7 @@ public class Gui extends Application{
 				}
 			}
 
-		});
+		});*/
 
 
 		Pane pane = new Pane();
@@ -208,9 +210,9 @@ public class Gui extends Application{
 		root.add(indbtn, 1, 1);
 		root.add(filename, 0, 2);
 		root.add(srcbtn, 1, 2);
-		root.add(l, 0, 3);
-		root.add(rbyes, 0, 4);
-		root.add(rbno, 1, 4);
+		//root.add(l, 0, 3);
+		//root.add(rbyes, 0, 4);
+		//root.add(rbno, 1, 4);
 		//        for(Node i: root.getChildren()) {
 		//        	if(i instanceof Control) {
 		//        		Control control = (Control) i;
@@ -234,12 +236,15 @@ public class Gui extends Application{
 				if(!absoluteImageFile.equals("")) {
 					Main.main(new String[]{"search", absoluteImageFile,"-i", indexname.getText()});
 					if(Main.bestMatchFound()) {
+						root.getChildren().remove(l);
 						root.getChildren().remove(outputBut);
-						root.add(outputBut, 0, 6);
+						root.add(outputBut, 0, 4);
 					}
 					else
 					{
 						root.getChildren().remove(outputBut);
+						root.getChildren().remove(l);
+						root.add(l, 0, 4);
 					}
 				}
 			}

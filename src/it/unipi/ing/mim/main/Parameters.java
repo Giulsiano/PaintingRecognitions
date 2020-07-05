@@ -10,7 +10,7 @@ public class Parameters {
     public static final File SRC_FOLDER = new File("./");
     
     //k-Nearest Neighbors
-    public static final int KNN = 50;
+    public static final int KNN = 20;
 
     // Number of random keypoint chosen from keypoint computed by SIFT
     public static final int RANDOM_KEYPOINT_NUM = 200;
@@ -31,7 +31,7 @@ public class Parameters {
     //Images to be indexed
     public static final Path imgDir = FileSystems.getDefault().getPath("wikiart");
     
-    public static final Integer NUM_KMEANS_CLUSTER = 10000; // TODO Ricorda di cambiarlo
+    public static final Integer NUM_KMEANS_CLUSTER = 200; // TODO Ricorda di cambiarlo
     
     // ORB feature extraction parameters
     public static final int ORB_MAX_FEATURE = 1000;

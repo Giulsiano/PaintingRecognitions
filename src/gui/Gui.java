@@ -85,7 +85,7 @@ public class Gui extends Application{
 		srcbtn.setStyle(style);
 
 		TextField indexname = new TextField();
-		indexname.setText("enter index name");
+		indexname.setText("enter_index_name");
 		indexname.setAlignment(Pos.CENTER);
 		indexname.setStyle(style2);
 

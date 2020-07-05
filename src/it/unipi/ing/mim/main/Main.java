@@ -19,6 +19,8 @@ public class Main {
 		else {
 		    String indexName = "-i".equals(args[args.length - 2]) ? args[args.length - 1] :
 		                                                            Parameters.INDEX_NAME;
+		    
+		    
 			try {
 				switch (args[0]) {
 				    case "search":
